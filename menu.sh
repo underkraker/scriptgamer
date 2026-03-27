@@ -487,7 +487,12 @@ function create_wg_user() {
     export PASS="1"
     
     echo -e "\n${YELLOW}[*] Generando llaves criptográficas. Por favor espera...${NC}"
-    printf "1\n%s\n\n\n\n" "$wg_user" | bash /etc/gaming_vps/wireguard.sh >/dev/null 2>&1
+    
+    # Desactivar lecturas interactivas TTY del script oficial de Angristan para evitar cuelgues eternos (Hang/Freeze)
+    sed -i 's/read -rp "Client name.*/#read/g' /etc/gaming_vps/wireguard.sh
+    sed -i 's/read -rp "Client WireGuard IPv.*/#read/g' /etc/gaming_vps/wireguard.sh
+    
+    bash /etc/gaming_vps/wireguard.sh >/dev/null 2>&1
     
     CONF_FILE=""
     if [ -f "/root/${wg_user}.conf" ]; then
