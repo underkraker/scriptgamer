@@ -87,11 +87,37 @@ EOF
     optimizer_menu
 }
 
+function open_internal_ports() {
+    header
+    echo -e "\n${CYAN}[*] Desbloqueando Puertos Internos (UFW / Iptables)...${NC}"
+    
+    # Si UFW existe (típico en Ubuntu), lo apaga
+    if command -v ufw &> /dev/null; then
+        ufw disable > /dev/null 2>&1
+    fi
+    
+    # Purgar bloqueos nativos de Linux
+    iptables -P INPUT ACCEPT
+    iptables -P FORWARD ACCEPT
+    iptables -P OUTPUT ACCEPT
+    iptables -F
+    iptables -X
+    iptables -t nat -F
+    iptables -t mangle -F
+    
+    echo -e "${GREEN}[✔] ¡Firewall Interno (Ubuntu) derribado exitosamente!${NC}"
+    echo -e "${YELLOW}🚨 ATENCIÓN AWS: Aún DEBES ir al portal de Amazon EC2 -> 'Security Groups' y permitir tráfico a los puertos (80, 443, 7300, etc.) o AWS impedirá la conexión física.${NC}"
+    echo -e "\nPresiona ENTER para continuar..."
+    read enter
+    optimizer_menu
+}
+
 function optimizer_menu() {
     header
     echo -e "\n${CYAN}>>> 🚀 MENÚ DE OPTIMIZACIÓN GAMING <<<${NC}\n"
     echo -e "${YELLOW}  [1]${NC} - 🌐 Activar Google BBR (Acelerador de Ping TCP)"
     echo -e "${YELLOW}  [2]${NC} - 🎮 Instalar BadVPN (Soporte UDP para Juegos en HTTP Custom/Injector)"
+    echo -e "${YELLOW}  [3]${NC} - 🔓 Abrir Puertos Internos (Purgar bloqueo de Ubuntu)"
     echo -e "${YELLOW}  [0]${NC} - 🔙 Volver al Menú Principal\n"
     echo -e "${CYAN}======================================================${NC}"
     
@@ -101,6 +127,7 @@ function optimizer_menu() {
     case $opt in
         1) install_bbr ;;
         2) install_badvpn ;;
+        3) open_internal_ports ;;
         0) main_menu ;;
         *) 
             echo -e "${RED}❌ Opción no válida.${NC}"
