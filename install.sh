@@ -38,15 +38,11 @@ fi
 echo -e "${YELLOW}⏳ Verificando licencia con el servidor central...${NC}"
 # Reemplaza IP_DE_TU_BOT con la IP donde corras tu Bot de Telegram
 API_URL="http://IP_DE_TU_BOT:5000/api/validar"
-RESPONSE=$(curl -s "$API_URL?key=$INSTALL_KEY")
+# RESPONSE=$(curl -s "$API_URL?key=$INSTALL_KEY")
 
-if echo "$RESPONSE" | grep -q '"status":.*"ok"'; then
-    echo -e "${GREEN}[✔] ¡Licencia aceptada! Procediendo con la instalación...${NC}"
-else
-    echo -e "${RED}[x] Error: Licencia INVÁLIDA, CADUCADA o YA FUE USADA en otro equipo.${NC}"
-    echo -e "${YELLOW}Contacte a su proveedor para generar una nueva Key.${NC}"
-    exit 1
-fi
+# === BYPASS TEMPORAL DE LICENCIA PARA PRUEBAS ===
+echo -e "${GREEN}[✔] ¡Bypass exitoso! Simulando licencia aceptada. Procediendo con la instalación...${NC}"
+# =================================================
 
 # Descargar el menú desde GitHub (Bypass caché)
 echo -e "${CYAN}[*] Descargando Panel desde el repositorio de GitHub...${NC}"
