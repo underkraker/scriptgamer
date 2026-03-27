@@ -90,8 +90,9 @@ function install_badvpn() {
     cd /opt/badvpn/build
     cmake .. -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 > /dev/null 2>&1
     make install > /dev/null 2>&1
+    MAKE_STATUS=$?
     
-    if command -v badvpn-udpgw &> /dev/null || [ -f /usr/local/bin/badvpn-udpgw ]; then
+    if [ $MAKE_STATUS -eq 0 ] && { command -v badvpn-udpgw &> /dev/null || [ -x /usr/local/bin/badvpn-udpgw ]; }; then
         BIN_PATH=$(command -v badvpn-udpgw || echo "/usr/local/bin/badvpn-udpgw")
         
         cat > /etc/systemd/system/badvpn.service <<EOF
@@ -217,9 +218,8 @@ function install_stunnel() {
       -subj "/C=US/ST=Gaming/L=Server/O=VPS/CN=gamingVPS" \
       -keyout /etc/stunnel/stunnel.pem -out /etc/stunnel/stunnel.pem > /dev/null 2>&1
       
-    # Configurar stunnel.conf agregando el PID local obligatorio para OS modernos
+    # Configurar stunnel.conf (Sin PID forzado para evitar conflictos en Ubuntu 24.04)
     cat > /etc/stunnel/stunnel.conf <<EOF
-pid = /var/run/stunnel.pid
 cert = /etc/stunnel/stunnel.pem
 client = no
 socket = a:SO_REUSEADDR=1
@@ -231,8 +231,7 @@ accept = 444
 connect = 127.0.0.1:80
 EOF
     
-    # Habilitar en default por compatibilidad legacy y luego forzar con systemd (Ubuntu 24.04+ rule)
-    sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4 2>/dev/null
+    # Reiniciar con el servicio nativo de Ubuntu
     systemctl daemon-reload > /dev/null 2>&1
     systemctl enable stunnel4 > /dev/null 2>&1
     systemctl restart stunnel4 > /dev/null 2>&1
@@ -492,7 +491,8 @@ function create_user() {
     fi
     
     echo -e -n "   ${CYAN}🔑 Contraseña:${NC} "
-    read password
+    read -rs password
+    echo
     echo -e -n "   ${CYAN}⏳ Días de duración (ej. 30):${NC} "
     read days
     echo -e -n "   ${CYAN}🔄 Límite de conexiones simultáneas (ej. 1):${NC} "
@@ -505,7 +505,7 @@ function create_user() {
     
     # Crear usuario con fecha de expiración (shell falso /bin/false para evitar acceso root)
     useradd -e $(date -d "$days days" +"%Y-%m-%d") -s /bin/false -M "$username"
-    echo "$username:$password" | chpasswd
+    echo "${username}:${password}" | chpasswd
     
     # Guardar límite de conexiones en un registro local del panel
     mkdir -p /etc/gaming_vps
@@ -638,12 +638,9 @@ function create_wg_user() {
     export CLIENT_NAME="$wg_user"
     export PASS="1"
     
-    # Desactivar lecturas interactivas TTY del script oficial de Angristan para evitar cuelgues eternos
-    sed -i 's/read -rp "Client name.*/#read/g' /etc/gaming_vps/wireguard.sh
-    sed -i 's/read -rp "Client WireGuard IPv.*/#read/g' /etc/gaming_vps/wireguard.sh
-    
-    # Ejecutar en segundo plano para barra de progreso
-    bash /etc/gaming_vps/wireguard.sh >/dev/null 2>&1 &
+    # Ejecutar en segundo plano enviando las entradas necesarias mediante tubería
+    # Esto evita modificar el script original destructivamente y asegura compatibilidad
+    echo -e "1\n${wg_user}\n1" | bash /etc/gaming_vps/wireguard.sh >/dev/null 2>&1 &
     PID=$!
     
     echo -e ""
@@ -749,8 +746,8 @@ function create_xray_user() {
     UUID=$(uuidgen)
     VPS_IP=$(curl -s ifconfig.me)
     
-    # Inyectar el usuario en los dos Inbounds simultáneos de Xray (TCP Nativo y Websocket Local)
-    jq '.inbounds[0].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'", "encryption": "none"}] | .inbounds[1].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'", "encryption": "none"}]' /usr/local/etc/xray/config.json > /tmp/xray.json
+    # Inyectar el usuario en los dos Inbounds simultáneos de Xray de forma segura mediante argumentos jq
+    jq --arg id "$UUID" --arg email "$xray_user" '.inbounds[0].settings.clients += [{"id": $id, "email": $email}] | .inbounds[1].settings.clients += [{"id": $id, "email": $email}]' /usr/local/etc/xray/config.json > /tmp/xray.json
     cp /tmp/xray.json /usr/local/etc/xray/config.json
     rm -f /tmp/xray.json
     
@@ -950,9 +947,9 @@ function setup_autokill() {
 for user in $(ls /etc/gaming_vps/*.limit 2>/dev/null | sed 's/.*\///;s/\.limit//'); do
     limite=$(cat /etc/gaming_vps/$user.limit)
     
-    # Usando pgrep -u aseguramos compatibilidad con nombres >8 caracteres
-    conex_drop=$(pgrep -u "$user" dropbear | wc -l)
-    conex_ssh=$(pgrep -u "$user" sshd | wc -l)
+    # Usando pgrep -x para matching exacto del proceso y evitar falsos positivos
+    conex_drop=$(pgrep -u "$user" -x dropbear 2>/dev/null | wc -l)
+    conex_ssh=$(pgrep -u "$user" -x sshd 2>/dev/null | wc -l)
     total=$(($conex_drop + $conex_ssh))
     
     if [ "$total" -gt "$limite" ]; then
@@ -1071,31 +1068,31 @@ function main_menu() {
         # Obtener recursos en tiempo real rápido (sin delays)
         RAM_TOTAL=$(free -m | awk '/Mem:/ {print $2}')
         RAM_USED=$(free -m | awk '/Mem:/ {print $3}')
-        CPU_LOAD=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
+        CPU_LOAD=$(LC_ALL=C top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
         CPU_LOAD=${CPU_LOAD%.*} # Quitar decimales
         [ -z "$CPU_LOAD" ] && CPU_LOAD="0"
 
-        # Listar puertos abiertos nativos del script
+        # Listar puertos abiertos nativos del script de forma estricta (Evita falsos positivos IPv6)
         ACTIVOS=$(ss -tuln 2>/dev/null || netstat -tuln 2>/dev/null)
         PUERTOS=""
-        echo "$ACTIVOS" | grep -q ":22 " && PUERTOS+="22(SSH) "
+        echo "$ACTIVOS" | grep -E -q ":22\b" && PUERTOS+="22(SSH) "
         
         # Agrupar puertos de Dropbear para ahorrar espacio visual
         DROP=""
-        echo "$ACTIVOS" | grep -q ":80 " && DROP+="80,"
-        echo "$ACTIVOS" | grep -q ":109 " && DROP+="109,"
-        echo "$ACTIVOS" | grep -q ":143 " && DROP+="143,"
+        echo "$ACTIVOS" | grep -E -q ":80\b" && DROP+="80,"
+        echo "$ACTIVOS" | grep -E -q ":109\b" && DROP+="109,"
+        echo "$ACTIVOS" | grep -E -q ":143\b" && DROP+="143,"
         if [ -n "$DROP" ]; then
             DROP=${DROP%,}
             PUERTOS+="${DROP}(Drop) "
         fi
         
-        echo "$ACTIVOS" | grep -q ":443 " && PUERTOS+="443(Xray) "
-        echo "$ACTIVOS" | grep -q ":444 " && PUERTOS+="444(SSL) "
-        echo "$ACTIVOS" | grep -q ":445 " && PUERTOS+="445(WS+SSL) "
-        echo "$ACTIVOS" | grep -q ":8888 " && PUERTOS+="8888(WS) "
-        echo "$ACTIVOS" | grep -q ":7300 " && PUERTOS+="7300(VPN) "
-        echo "$ACTIVOS" | grep -q ":51820 " && PUERTOS+="51820(WG)"
+        echo "$ACTIVOS" | grep -E -q ":443\b" && PUERTOS+="443(Xray) "
+        echo "$ACTIVOS" | grep -E -q ":444\b" && PUERTOS+="444(SSL) "
+        echo "$ACTIVOS" | grep -E -q ":445\b" && PUERTOS+="445(WS+SSL) "
+        echo "$ACTIVOS" | grep -E -q ":8888\b" && PUERTOS+="8888(WS) "
+        echo "$ACTIVOS" | grep -E -q ":7300\b" && PUERTOS+="7300(VPN) "
+        echo "$ACTIVOS" | grep -E -q ":51820\b" && PUERTOS+="51820(WG)"
         [ -z "$PUERTOS" ] && PUERTOS="Ninguno"
 
         header

@@ -22,7 +22,7 @@ fi
 # Actualizar e instalar base
 echo -e "\n${CYAN}[*] Instalando dependencias base en el VPS...${NC}"
 apt-get update -y > /dev/null 2>&1
-apt-get install -y wget curl jq > /dev/null 2>&1
+apt-get install -y wget curl jq net-tools iproute2 cron ca-certificates iptables > /dev/null 2>&1
 
 echo -e "\n${MAGENTA}======================================================${NC}"
 echo -e "${WHITE}${BOLD}      VERIFICACIÓN DE LICENCIA PREMIUM${NC}"
