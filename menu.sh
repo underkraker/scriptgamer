@@ -442,12 +442,69 @@ function delete_user() {
     return
 }
 
+function create_wg_user() {
+    header
+    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}C R E A R   C L I E N T E   W I R E G U A R D${NC} ${MAGENTA}❖${NC}\n"
+    
+    if [ ! -f /etc/wireguard/wg0.conf ] && [ ! -f /etc/gaming_vps/wireguard.sh ]; then
+        echo -e "${RED}[x] Error: WireGuard no ha sido instalado desde el menú de Protocolos.${NC}"
+        sleep 3
+        return
+    fi
+    
+    # Descargar el script en caso de que lo hubieran borrado pero el servicio siga vivo
+    if [ ! -f /etc/gaming_vps/wireguard.sh ]; then
+        wget -qO /etc/gaming_vps/wireguard.sh https://raw.githubusercontent.com/angristan/wireguard-install/master/wireguard-install.sh
+        chmod +x /etc/gaming_vps/wireguard.sh
+    fi
+    
+    echo -e -n "   ${CYAN}👤 Nombre del perfil (sin espacios):${NC} "
+    read wg_user
+    
+    # Forzar parámetros para saltar interacción del script oficial
+    export MENU_OPTION="1"
+    export CLIENT_NAME="$wg_user"
+    export PASS="1"
+    
+    echo -e "\n${YELLOW}[*] Generando llaves criptográficas. Por favor espera...${NC}"
+    printf "1\n%s\n\n\n\n" "$wg_user" | bash /etc/gaming_vps/wireguard.sh >/dev/null 2>&1
+    
+    CONF_FILE=""
+    if [ -f "/root/${wg_user}.conf" ]; then
+        CONF_FILE="/root/${wg_user}.conf"
+    elif [ -f "./${wg_user}.conf" ]; then
+        CONF_FILE="./${wg_user}.conf"
+    elif [ -f "/home/${SUDO_USER}/${wg_user}.conf" ]; then
+        CONF_FILE="/home/${SUDO_USER}/${wg_user}.conf"
+    fi
+    
+    if [ -n "$CONF_FILE" ]; then
+        echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "   ${GREEN}[✔] Cliente WireGuard '$wg_user' Creado Exitosamente:${NC}\n"
+        cat "$CONF_FILE"
+        echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        
+        # Renderizar QR Terminal si qrencode existe (el instalador de angristan suele instalarlo)
+        if command -v qrencode &> /dev/null; then
+            echo -e "\n   ${CYAN}📱 Código QR de Conexión (Escanea con App Móvil):${NC}"
+            qrencode -t ANSIUTF8 < "$CONF_FILE"
+        fi
+    else
+        echo -e "\n${RED}[x] Ocurrió un error o el perfil no se pudo generar.${NC}"
+    fi
+    
+    echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
+    read enter
+    return
+}
+
 function users_menu() {
     while true; do
         header
         echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}G E S T I Ó N   D E   C L I E N T E S${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}➕ Crear Cliente con Autorización Temporal${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}➖ Eliminar y Desconectar Cliente${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}➕ Crear Cliente SSH (Pase Temporal)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}➖ Eliminar y Desconectar Cliente SSH${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🦇 Crear Cliente WireGuard (Generar Config / QR)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
@@ -457,6 +514,7 @@ function users_menu() {
         case $opt in
             1) create_user ;;
             2) delete_user ;;
+            3) create_wg_user ;;
             0) return ;;
             *) 
                 echo -e "${RED}❌ Opción no válida.${NC}"
