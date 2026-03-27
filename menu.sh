@@ -927,40 +927,58 @@ function main_menu() {
 
         # Listar puertos abiertos dinámicos, excluyendo basura del sistema
         ACTIVOS=$(ss -tuln | awk '{print $5}' | cut -d: -f2 | grep -v '^$' | sort -u)
-        PUERTOS=""
+        PUERTOS_LIST=()
         
         for p in $ACTIVOS; do
             # Filtro estricto de puertos NO 'basura' (Solo mostramos protocolos de tunnel conocidos)
             case $p in
-                22) PUERTOS+="${p}(SSH) " ;;
+                22) PUERTOS_LIST+=("${p}(SSH)") ;;
                 80|143|109) 
-                    if pgrep -f "dropbear.*-p $p" >/dev/null; then PUERTOS+="${p}(Drop) "; fi ;;
+                    if pgrep -f "dropbear.*-p $p" >/dev/null; then PUERTOS_LIST+=("${p}(Drop)"); fi ;;
                 443|444|445) 
-                    if pgrep -f "stunnel4" >/dev/null; then PUERTOS+="${p}(SSL) "; fi ;;
+                    if pgrep -f "stunnel4" >/dev/null; then PUERTOS_LIST+=("${p}(SSL)"); fi ;;
                 8080|3128) 
-                    if pgrep -f "squid" >/dev/null; then PUERTOS+="${p}(Sqd) "; fi ;;
+                    if pgrep -f "squid" >/dev/null; then PUERTOS_LIST+=("${p}(Sqd)"); fi ;;
                 7300|7400|7500) 
-                    if pgrep -f "badvpn" >/dev/null; then PUERTOS+="${p}(UDP) "; fi ;;
+                    if pgrep -f "badvpn" >/dev/null; then PUERTOS_LIST+=("${p}(UDP)"); fi ;;
                 1194) 
-                    if pgrep -f "openvpn" >/dev/null; then PUERTOS+="${p}(OVPN) "; fi ;;
+                    if pgrep -f "openvpn" >/dev/null; then PUERTOS_LIST+=("${p}(OVPN)"); fi ;;
             esac
             
             # Caso especial para el Python WS que puede estar en cualquier puerto
             if [ "$p" != "22" ] && [ "$p" != "80" ] && [ "$p" != "443" ] && pgrep -f "ws.py" >/dev/null; then
                  # Si el puerto $p es el puerto que escucha el servicio ws-python
                  if netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "python"; then
-                    PUERTOS+="${p}(WS) "
+                    PUERTOS_LIST+=("${p}(WS)")
                  fi
             fi
         done
-        
-        [ -z "$PUERTOS" ] && PUERTOS="Sin Protocolos Activos"
 
         header
         echo -e "   ${CYAN}🌐 IP Server :${NC} ${WHITE}${BOLD}${VPS_IP}${NC}"
         echo -e "   ${CYAN}💾 Mem. RAM  :${NC} ${WHITE}${BOLD}${RAM_USED} MB / ${RAM_TOTAL} MB${NC}"
         echo -e "   ${CYAN}🧠 Uso CPU   :${NC} ${WHITE}${BOLD}${CPU_LOAD}%${NC}"
-        echo -e "   ${CYAN}🔓 Puertos   :${NC} ${YELLOW}${PUERTOS}${NC}"
+        
+        # Mostrar puertos de forma estética en filas de 3
+        echo -e "   ${CYAN}🔓 Puertos Activos:${NC}"
+        if [ ${#PUERTOS_LIST[@]} -eq 0 ]; then
+            echo -e "      ${YELLOW}Ninguno${NC}"
+        else
+            COUNT=0
+            ROW="      "
+            for item in "${PUERTOS_LIST[@]}"; do
+                # Formatear cada item con un ancho fijo aproximado de 15 caracteres
+                F_ITEM=$(printf "%-15s" "$item")
+                ROW+="${YELLOW}${F_ITEM}${NC}"
+                ((COUNT++))
+                if [ $COUNT -eq 3 ]; then
+                    echo -e "$ROW"
+                    ROW="      "
+                    COUNT=0
+                fi
+            done
+            [ $COUNT -gt 0 ] && echo -e "$ROW"
+        fi
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M E N Ú   P R I N C I P A L${NC} ${MAGENTA}❖${NC}\n"
         echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}👤 Gestor de Usuarios VIP${NC}"
