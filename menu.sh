@@ -466,33 +466,68 @@ function create_wg_user() {
     header
     echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}C R E A R   C L I E N T E   W I R E G U A R D${NC} ${MAGENTA}❖${NC}\n"
     
-    if [ ! -f /etc/wireguard/wg0.conf ] && [ ! -f /etc/gaming_vps/wireguard.sh ]; then
-        echo -e "${RED}[x] Error: WireGuard no ha sido instalado desde el menú de Protocolos.${NC}"
-        sleep 3
+    # Verificar estrictamente que WireGuard está instalado y funcionando
+    if [ ! -f /etc/wireguard/wg0.conf ]; then
+        echo -e "${RED}[x] Error Crítico: WireGuard no ha sido instalado o configurado en este VPS.${NC}"
+        echo -e "${YELLOW}>> Por favor, instálalo primero desde la opción [ 6 ] del menú de Protocolos.${NC}"
+        sleep 4
         return
     fi
     
-    # Descargar el script en caso de que lo hubieran borrado pero el servicio siga vivo
+    # Descargar el script en caso de que lo hubieran borrado
     if [ ! -f /etc/gaming_vps/wireguard.sh ]; then
         wget -qO /etc/gaming_vps/wireguard.sh https://raw.githubusercontent.com/angristan/wireguard-install/master/wireguard-install.sh
         chmod +x /etc/gaming_vps/wireguard.sh
     fi
     
-    echo -e -n "   ${CYAN}👤 Nombre del perfil (sin espacios):${NC} "
+    echo -e -n "   ${CYAN}👤 Nombre del perfil (sin espacios, evitar duplicados):${NC} "
     read wg_user
     
-    # Forzar parámetros para saltar interacción del script oficial
+    # ====== VALIDACIONES ANTES DE ENVIAR AL SCRIPT ======
+    if ! [[ ${wg_user} =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo -e "\n   ${RED}[x] Error: El nombre solo puede contener letras, números, guiones y rayas bajas.${NC}"
+        sleep 3; return
+    fi
+    if [ ${#wg_user} -gt 15 ]; then
+        echo -e "\n   ${RED}[x] Error: El nombre de usuario no puede exceder los 15 caracteres.${NC}"
+        sleep 3; return
+    fi
+    # Verificar si ya existe para evitar bucles infinitos en el sub-script
+    if grep -q -E "^### Client ${wg_user}\$" "/etc/wireguard/wg0.conf" 2>/dev/null; then
+        echo -e "\n   ${RED}[x] Error: Un cliente con el nombre '$wg_user' ya existe. Elige otro.${NC}"
+        sleep 3; return
+    fi
+    
+    # Forzar parámetros requeridos
     export MENU_OPTION="1"
     export CLIENT_NAME="$wg_user"
     export PASS="1"
     
-    echo -e "\n${YELLOW}[*] Generando llaves criptográficas. Por favor espera...${NC}"
-    
-    # Desactivar lecturas interactivas TTY del script oficial de Angristan para evitar cuelgues eternos (Hang/Freeze)
+    # Desactivar lecturas interactivas TTY del script oficial de Angristan para evitar cuelgues eternos
     sed -i 's/read -rp "Client name.*/#read/g' /etc/gaming_vps/wireguard.sh
     sed -i 's/read -rp "Client WireGuard IPv.*/#read/g' /etc/gaming_vps/wireguard.sh
     
-    bash /etc/gaming_vps/wireguard.sh >/dev/null 2>&1
+    # Ejecutar en segundo plano para barra de progreso
+    bash /etc/gaming_vps/wireguard.sh >/dev/null 2>&1 &
+    PID=$!
+    
+    echo -e ""
+    echo -e -n "   ${YELLOW}⏳ Generando configuración [${NC}"
+    
+    # Bucle de progreso (máximo 15 segundos para evitar cuelgues eternos de seguridad)
+    timeout=0
+    while kill -0 $PID 2>/dev/null; do
+        echo -n "█"
+        sleep 0.5
+        ((timeout++))
+        if [ $timeout -ge 30 ]; then
+            kill -9 $PID 2>/dev/null
+            echo -e "${YELLOW}]${NC} ${RED}❌ Error (Tiempo límite superado)${NC}"
+            echo -e "   ${RED}El instalador subyacente de WireGuard se trabó. Abortando protección.${NC}"
+            sleep 3; return
+        fi
+    done
+    echo -e "${YELLOW}]${NC} ${GREEN}¡Listo!${NC}"
     
     CONF_FILE=""
     if [ -f "/root/${wg_user}.conf" ]; then
