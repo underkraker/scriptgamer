@@ -352,10 +352,13 @@ def handle_client(client_socket):
         remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         remote_socket.connect(('127.0.0.1', $dest_port))
         
-        # Mapeo inteligente de Handshake (Estilo ChumoGH)
+        # Mapeo inteligente de Handshake (Estilo ChumoGH Avanzado)
         req_str = request.decode('utf-8', 'ignore')
-        if "HTTP" in req_str or "GET" in req_str or "CONNECT" in req_str:
+        if "Upgrade: websocket" in req_str.lower() or "upgrade: ws" in req_str.lower():
             client_socket.send(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
+        elif "HTTP" in req_str or "CONNECT" in req_str or "GET" in req_str:
+            # Es un Payload simple (Injector/Custom) sin WebSocket
+            client_socket.send(b"HTTP/1.1 200 Connection Established\r\n\r\n")
         else:
             # Si es tráfico puro (ej SSH bruto), enviamos la petición original intacta
             remote_socket.send(request)
