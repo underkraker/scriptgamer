@@ -444,6 +444,29 @@ function create_user() {
     return
 }
 
+function list_ssh_users() {
+    header
+    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}C L I E N T E S   S S H   A C T I V O S${NC} ${MAGENTA}❖${NC}\n"
+    
+    printf "   %-15s %-15s %-15s %-15s\n" "USUARIO" "EXPIRA" "LÍMITE" "CONEXIONES"
+    echo -e "   ---------------------------------------------------------------"
+    for user in $(ls /etc/gaming_vps/*.limit 2>/dev/null | sed 's/.*\///;s/\.limit//'); do
+        limite=$(cat /etc/gaming_vps/$user.limit 2>/dev/null || echo "N/A")
+        expira=$(chage -l "$user" 2>/dev/null | grep "Account expires" | cut -d':' -f2 | sed 's/^ //')
+        if [ -z "$expira" ] || [ "$expira" == "never" ]; then expira="Nunca"; fi
+        
+        conex_drop=$(pgrep -u "$user" dropbear 2>/dev/null | wc -l)
+        conex_ssh=$(pgrep -u "$user" sshd 2>/dev/null | wc -l)
+        total=$(($conex_drop + $conex_ssh))
+        
+        printf "   %-15s %-15s %-15s %-15s\n" "$user" "$expira" "$limite" "$total"
+    done
+    
+    echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
+    read enter
+    return
+}
+
 function delete_user() {
     header
     echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}E L I M I N A R   U S U A R I O${NC} ${MAGENTA}❖${NC}\n"
@@ -546,10 +569,43 @@ function create_wg_user() {
         # Renderizar QR Terminal si qrencode existe (el instalador de angristan suele instalarlo)
         if command -v qrencode &> /dev/null; then
             echo -e "\n   ${CYAN}📱 Código QR de Conexión (Escanea con App Móvil):${NC}"
-            qrencode -t ANSIUTF8 < "$CONF_FILE"
+            qrencode -t UTF8 < "$CONF_FILE"
         fi
     else
         echo -e "\n${RED}[x] Ocurrió un error o el perfil no se pudo generar.${NC}"
+    fi
+    
+    echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
+    read enter
+    return
+}
+
+function view_wg_user() {
+    header
+    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}V E R   P E R F I L   W I R E G U A R D${NC} ${MAGENTA}❖${NC}\n"
+    
+    echo -e -n "   ${CYAN}👤 Nombre del perfil WireGuard a buscar:${NC} "
+    read wg_user
+    
+    CONF_FILE=$(ls /root/*"${wg_user}.conf" 2>/dev/null | head -n 1)
+    if [ -z "$CONF_FILE" ]; then
+        CONF_FILE=$(ls ./*"${wg_user}.conf" 2>/dev/null | head -n 1)
+    fi
+    if [ -z "$CONF_FILE" ] && [ -n "$SUDO_USER" ]; then
+        CONF_FILE=$(ls /home/${SUDO_USER}/*"${wg_user}.conf" 2>/dev/null | head -n 1)
+    fi
+    
+    if [ -n "$CONF_FILE" ] && [ -f "$CONF_FILE" ]; then
+        echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        cat "$CONF_FILE"
+        echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        
+        if command -v qrencode &> /dev/null; then
+            echo -e "\n   ${CYAN}📱 Código QR de Conexión:${NC}"
+            qrencode -t UTF8 < "$CONF_FILE"
+        fi
+    else
+        echo -e "\n${RED}[x] No se encontró la configuración local para el usuario: '$wg_user'.${NC}"
     fi
     
     echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
@@ -563,7 +619,9 @@ function users_menu() {
         echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}G E S T I Ó N   D E   C L I E N T E S${NC} ${MAGENTA}❖${NC}\n"
         echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}➕ Crear Cliente SSH (Pase Temporal)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}➖ Eliminar y Desconectar Cliente SSH${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🦇 Crear Cliente WireGuard (Generar Config / QR)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}👥 Ver Detalles y Límite de Clientes SSH${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}🦇 Crear Cliente WireGuard (Generar Config)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}📱 Mostrar Config/QR de un Cliente WireGuard${NC}"
         echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
@@ -573,7 +631,9 @@ function users_menu() {
         case $opt in
             1) create_user ;;
             2) delete_user ;;
-            3) create_wg_user ;;
+            3) list_ssh_users ;;
+            4) create_wg_user ;;
+            5) view_wg_user ;;
             0) return ;;
             *) 
                 echo -e "${RED}❌ Opción no válida.${NC}"
