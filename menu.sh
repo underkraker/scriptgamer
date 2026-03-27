@@ -1050,10 +1050,43 @@ function uninstall_script() {
 }
 # =========================================================
 
+# Variables Globales del Sistema (Caché visual rápida)
+VPS_IP=""
+
 # Función para mostrar el panel principal
 function main_menu() {
+    if [ -z "$VPS_IP" ]; then
+        VPS_IP=$(curl -s4 --max-time 3 ifconfig.me || curl -s4 --max-time 3 icanhazip.com || echo "Desconocida")
+    fi
+
     while true; do
+        # Obtener recursos en tiempo real rápido (sin delays)
+        RAM_TOTAL=$(free -m | awk '/Mem:/ {print $2}')
+        RAM_USED=$(free -m | awk '/Mem:/ {print $3}')
+        CPU_LOAD=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
+        CPU_LOAD=${CPU_LOAD%.*} # Quitar decimales
+        [ -z "$CPU_LOAD" ] && CPU_LOAD="0"
+
+        # Listar puertos abiertos nativos del script
+        ACTIVOS=$(ss -tuln 2>/dev/null || netstat -tuln 2>/dev/null)
+        PUERTOS=""
+        echo "$ACTIVOS" | grep -q ":22 " && PUERTOS+="22 "
+        echo "$ACTIVOS" | grep -q ":80 " && PUERTOS+="80 "
+        echo "$ACTIVOS" | grep -q ":109 " && PUERTOS+="109 "
+        echo "$ACTIVOS" | grep -q ":143 " && PUERTOS+="143 "
+        echo "$ACTIVOS" | grep -q ":443 " && PUERTOS+="443 "
+        echo "$ACTIVOS" | grep -q ":444 " && PUERTOS+="444 "
+        echo "$ACTIVOS" | grep -q ":8888 " && PUERTOS+="8888 "
+        echo "$ACTIVOS" | grep -q ":7300 " && PUERTOS+="7300(UDP) "
+        echo "$ACTIVOS" | grep -q ":51820 " && PUERTOS+="51820(UDP)"
+        [ -z "$PUERTOS" ] && PUERTOS="Ninguno detectado"
+
         header
+        echo -e "   ${CYAN}🌐 IP Server :${NC} ${WHITE}${BOLD}${VPS_IP}${NC}"
+        echo -e "   ${CYAN}💾 Mem. RAM  :${NC} ${WHITE}${BOLD}${RAM_USED} MB / ${RAM_TOTAL} MB${NC}"
+        echo -e "   ${CYAN}🧠 Uso CPU   :${NC} ${WHITE}${BOLD}${CPU_LOAD}%${NC}"
+        echo -e "   ${CYAN}🔓 Puertos   :${NC} ${YELLOW}${PUERTOS}${NC}"
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M E N Ú   P R I N C I P A L${NC} ${MAGENTA}❖${NC}\n"
         echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}👤 Gestor de Usuarios VIP${NC}"
         echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🚀 Acelerador y Optimización de Red${NC}"
