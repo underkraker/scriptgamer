@@ -394,66 +394,6 @@ function install_wireguard() {
     return
 }
 
-function install_xray() {
-    header
-    echo -e "\n${CYAN}[*] Instalador Oficial Xray Core (Multiplexador TLS)...${NC}"
-    echo -e -n "   ${CYAN}🔌 ¿En qué puerto quieres instalar Xray VLESS? (Escoge uno libre, ej: 443):${NC} "
-    read -r xray_port
-    [ -z "$xray_port" ] && xray_port=443
-    
-    mkdir -p /usr/local/etc/xray
-    
-    # Guardar puerto Xray internamente para la creación de usuarios
-    echo "$xray_port" > /usr/local/etc/xray/port.cfg
-    
-    # Generar SSL Nativo para Xray
-    openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
-      -subj "/C=US/ST=Gaming/L=Server/O=VPS/CN=XrayVLESS" \
-      -keyout /usr/local/etc/xray/xray.key -out /usr/local/etc/xray/xray.crt >/dev/null 2>&1
-      
-    # Crear la configuración VLESS Autónoma (Sin Fallbacks)
-    cat > /usr/local/etc/xray/config.json <<EOF
-{
-  "log": {
-    "loglevel": "warning"
-  },
-  "inbounds": [
-    {
-      "port": $xray_port,
-      "protocol": "vless",
-      "settings": {
-        "clients": [],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "tls",
-        "tlsSettings": {
-          "alpn": ["http/1.1"],
-          "certificates": [
-            {
-              "certificateFile": "/usr/local/etc/xray/xray.crt",
-              "keyFile": "/usr/local/etc/xray/xray.key"
-            }
-          ]
-        }
-      }
-    }
-  ],
-  "outbounds": [
-    {
-      "protocol": "freedom"
-    }
-  ]
-}
-EOF
-    systemctl enable xray > /dev/null 2>&1
-    systemctl restart xray > /dev/null 2>&1
-    
-    echo -e "${GREEN}[✔] ¡Xray VLESS autónomo activado en el puerto $xray_port!${NC}"
-    sleep 5
-    return
-}
 
 function services_menu() {
     while true; do
@@ -465,7 +405,6 @@ function services_menu() {
         echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}☁️  WebSocket Python (Para Cloudflare)${NC}"
         echo -e "      ${CYAN}[${YELLOW}  5 ${CYAN}]${NC} ${BOLD}🛡️  OpenVPN Instalador Automático${NC}"
         echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}⚡ WireGuard Auto-Instalador (Low Ping UDP)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🦇 Xray VLESS Independiente (SNI Bug Carrier)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
@@ -479,7 +418,6 @@ function services_menu() {
             4) install_ws_python ;;
             5) install_openvpn ;;
             6) install_wireguard ;;
-            7) install_xray ;;
             0) return ;;
             *) 
                 echo -e "${RED}❌ Opción no válida.${NC}"
@@ -738,60 +676,6 @@ function view_wg_user() {
     return
 }
 
-function create_xray_user() {
-    header
-    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}C R E A R   P E R F I L   V L E S S   ( S N I   B U G )${NC} ${MAGENTA}❖${NC}\n"
-    
-    if [ ! -f /usr/local/etc/xray/config.json ]; then
-        echo -e "${RED}[x] Error: Xray no está instalado. Instálalo desde el menú Protocolos (Opción 7).${NC}"
-        sleep 3
-        return
-    fi
-    
-    echo -e -n "   ${CYAN}👤 Nombre del usuario:${NC} "
-    read xray_user
-    
-    # Validaciones básicas
-    if [[ -z "$xray_user" ]]; then return; fi
-    
-    echo -e -n "   ${CYAN}🌐 Escribe el SNI Bug (Ej. www.whatsapp.net):${NC} "
-    read sni_bug
-    if [[ -z "$sni_bug" ]]; then sni_bug="bug.com"; fi
-    
-    # Inyectar el usuario en la BD de Xray con JQ
-    UUID=$(uuidgen)
-    VPS_IP=$(curl -s ifconfig.me)
-    
-    # Leer el puerto donde fue instalado Xray
-    XRAY_PORT=$(cat /usr/local/etc/xray/port.cfg 2>/dev/null || echo "443")
-    
-    # Inyectar el usuario en Inbound principal
-    jq --arg id "$UUID" --arg email "$xray_user" '.inbounds[0].settings.clients += [{"id": $id, "email": $email}]' /usr/local/etc/xray/config.json > /tmp/xray.json
-    cp /tmp/xray.json /usr/local/etc/xray/config.json
-    rm -f /tmp/xray.json
-    
-    systemctl restart xray
-    
-    # Generar Links VLESS en base al puerto asignado
-    VLESS_TCP="vless://${UUID}@${VPS_IP}:${XRAY_PORT}?type=tcp&encryption=none&security=tls&sni=${sni_bug}#${xray_user}_TCP"
-    
-    echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${GREEN}[✔] Cliente VLESS Creado Exitosamente:${NC}\n"
-    
-    echo -e "   ${YELLOW}🚀 VLESS Puro TCP (Fast Gaming VPN en XTLS):${NC}"
-    echo -e "   ${WHITE}${VLESS_TCP}${NC}"
-    
-    echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    
-    if command -v qrencode &> /dev/null; then
-        echo -e "\n   ${CYAN}📱 QR de Conexión:${NC}"
-        echo "${VLESS_TCP}" | qrencode -t UTF8
-    fi
-    
-    echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
-    read enter
-    return
-}
 
 function users_menu() {
     while true; do
@@ -802,7 +686,6 @@ function users_menu() {
         echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}👥 Ver Detalles y Límite de Clientes SSH${NC}"
         echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}🦇 Crear Cliente WireGuard (Generar Config)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}📱 Mostrar Config/QR de un Cliente WireGuard${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}💎 Crear Cliente Xray VLESS (SNI Bug para Inyectores)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
@@ -815,7 +698,6 @@ function users_menu() {
             3) list_ssh_users ;;
             4) create_wg_user ;;
             5) view_wg_user ;;
-            6) create_xray_user ;;
             0) return ;;
             *) 
                 echo -e "${RED}❌ Opción no válida.${NC}"
@@ -1103,8 +985,6 @@ function main_menu() {
                 PUERTOS+="${p}(Sqd) "
             elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "python"; then
                 PUERTOS+="${p}(WS) "
-            elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "xray"; then
-                PUERTOS+="${p}(Xray) "
             elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "badvpn"; then
                 PUERTOS+="${p}(VPN) "
             elif [ "$p" == "51820" ]; then
