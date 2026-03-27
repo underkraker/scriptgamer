@@ -24,25 +24,7 @@ echo -e "\n${CYAN}[*] Instalando dependencias base en el VPS...${NC}"
 apt-get update -y > /dev/null 2>&1
 apt-get install -y wget curl jq net-tools iproute2 cron ca-certificates iptables > /dev/null 2>&1
 
-echo -e "\n${MAGENTA}======================================================${NC}"
-echo -e "${WHITE}${BOLD}      VERIFICACIÓN DE LICENCIA PREMIUM${NC}"
-echo -e "${MAGENTA}======================================================${NC}"
-# echo -e -n "${CYAN}🔑 Ingrese su Key de Instalación (Ej. KRAKER-ABC123): ${NC}"
-# read INSTALL_KEY
 
-# if [ -z "$INSTALL_KEY" ]; then
-#     echo -e "${RED}[x] Debe ingresar una licencia válida. Instalación abortada.${NC}"
-#     exit 1
-# fi
-
-echo -e "${YELLOW}⏳ Verificando licencia con el servidor central...${NC}"
-# Reemplaza IP_DE_TU_BOT con la IP donde corras tu Bot de Telegram
-API_URL="http://IP_DE_TU_BOT:5000/api/validar"
-# RESPONSE=$(curl -s "$API_URL?key=$INSTALL_KEY")
-
-# === BYPASS TEMPORAL DE LICENCIA PARA PRUEBAS ===
-echo -e "${GREEN}[✔] ¡Bypass exitoso! Simulando licencia aceptada. Procediendo con la instalación...${NC}"
-# =================================================
 
 # Descargar el menú desde GitHub (Bypass caché)
 echo -e "${CYAN}[*] Descargando Panel desde el repositorio de GitHub...${NC}"

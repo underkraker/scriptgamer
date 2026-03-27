@@ -92,17 +92,21 @@ function install_badvpn() {
     make install > /dev/null 2>&1
     MAKE_STATUS=$?
     
+    echo -e -n "   ${CYAN}🔌 ¿En qué puerto abrirás BadVPN UDPGW? (Ej: 7300):${NC} "
+    read -r vpn_port
+    [ -z "$vpn_port" ] && vpn_port=7300
+    
     if [ $MAKE_STATUS -eq 0 ] && { command -v badvpn-udpgw &> /dev/null || [ -x /usr/local/bin/badvpn-udpgw ]; }; then
         BIN_PATH=$(command -v badvpn-udpgw || echo "/usr/local/bin/badvpn-udpgw")
         
         cat > /etc/systemd/system/badvpn.service <<EOF
 [Unit]
-Description=BadVPN UDPGW Gaming Port 7300
+Description=BadVPN UDPGW Gaming Port $vpn_port
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=$BIN_PATH --listen-addr 127.0.0.1:7300 --max-clients 500 --max-connections-for-client 10
+ExecStart=$BIN_PATH --listen-addr 127.0.0.1:$vpn_port --max-clients 500 --max-connections-for-client 10
 Restart=always
 RestartSec=3
 
@@ -112,7 +116,7 @@ EOF
         systemctl daemon-reload > /dev/null 2>&1
         systemctl enable badvpn > /dev/null 2>&1
         systemctl restart badvpn > /dev/null 2>&1
-        echo -e "${GREEN}[✔] BadVPN UDP activado correctamente en el puerto 7300.${NC}"
+        echo -e "${GREEN}[✔] BadVPN UDP activado correctamente en el puerto $vpn_port.${NC}"
     else
         echo -e "${RED}[x] Error al compilar BadVPN. Verifica el entorno de dependencias.${NC}"
     fi
@@ -184,11 +188,26 @@ function install_dropbear() {
     apt-get update -y > /dev/null 2>&1
     apt-get install -y dropbear > /dev/null 2>&1
     
-    # Sobrescribir la configuración directamente (Evita problemas de sintaxis con "sed" en Ubuntu 24)
+    echo -e -n "   ${CYAN}🔌 Ingrese el o los puertos para Dropbear separados por espacio (Ej: 80 143 109):${NC} "
+    read -r port_input
+    
+    if [ -z "$port_input" ]; then
+        port_input="80 143 109"
+    fi
+    
+    # Extraer el primer puerto como puerto principal y el resto como argumentos extra
+    PORTS=($port_input)
+    MAIN_PORT=${PORTS[0]}
+    EXTRA_ARGS=""
+    for (( i=1; i<${#PORTS[@]}; i++ )); do
+        EXTRA_ARGS="$EXTRA_ARGS -p ${PORTS[$i]}"
+    done
+    
+    # Sobrescribir la configuración
     cat > /etc/default/dropbear <<EOF
 NO_START=0
-DROPBEAR_PORT=80
-DROPBEAR_EXTRA_ARGS="-p 143 -p 109"
+DROPBEAR_PORT=$MAIN_PORT
+DROPBEAR_EXTRA_ARGS="$EXTRA_ARGS"
 DROPBEAR_BANNER=""
 DROPBEAR_RECEIVE_WINDOW=65536
 EOF
@@ -218,6 +237,14 @@ function install_stunnel() {
       -subj "/C=US/ST=Gaming/L=Server/O=VPS/CN=gamingVPS" \
       -keyout /etc/stunnel/stunnel.pem -out /etc/stunnel/stunnel.pem > /dev/null 2>&1
       
+    echo -e -n "   ${CYAN}🔌 ¿Qué puerto escuchará Stunnel? (Ej: 444):${NC} "
+    read -r listen_port
+    [ -z "$listen_port" ] && listen_port=444
+    
+    echo -e -n "   ${CYAN}🎯 ¿A qué puerto interno redirigirá? (Ej: 80 - Tu puerto Dropbear o SSH):${NC} "
+    read -r dest_port
+    [ -z "$dest_port" ] && dest_port=80
+    
     # Configurar stunnel.conf (Sin PID forzado para evitar conflictos en Ubuntu 24.04)
     cat > /etc/stunnel/stunnel.conf <<EOF
 cert = /etc/stunnel/stunnel.pem
@@ -227,8 +254,8 @@ socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 
 [dropbear-ssl]
-accept = 444
-connect = 127.0.0.1:80
+accept = $listen_port
+connect = 127.0.0.1:$dest_port
 EOF
     
     # Reiniciar con el servicio nativo de Ubuntu
@@ -248,16 +275,19 @@ function install_squid() {
     apt-get update -y > /dev/null 2>&1
     apt-get install -y squid > /dev/null 2>&1
     
-    cat > /etc/squid/squid.conf <<EOF
-http_port 8080
-http_port 3128
-acl localhost src 127.0.0.1/32
-acl allow_ports port 22 80 143 109 443 7300 8888
-acl dest_local dst 127.0.0.0/8
-http_access allow localhost
-http_access allow dest_local allow_ports
-http_access deny all
-EOF
+    echo -e -n "   ${CYAN}🔌 Ingresa los puertos de Squid separados por espacio (Ej: 8080 3128):${NC} "
+    read -r proxy_ports
+    [ -z "$proxy_ports" ] && proxy_ports="8080 3128"
+    
+    # Construir líneas de puerto interactivamente
+    SQUID_CONF="acl localhost src 127.0.0.1/32\nacl dest_local dst 127.0.0.0/8\n"
+    for P in $proxy_ports; do
+        SQUID_CONF="http_port $P\n$SQUID_CONF"
+    done
+    SQUID_CONF="${SQUID_CONF}acl allow_ports port 22 80 143 109 443 7300 8888 8080 3128 444 445\n"
+    SQUID_CONF="${SQUID_CONF}http_access allow localhost\nhttp_access allow dest_local allow_ports\nhttp_access deny all"
+    
+    echo -e "$SQUID_CONF" > /etc/squid/squid.conf
     service squid restart > /dev/null 2>&1
     echo -e "${GREEN}[✔] Proxy Squid activado en puertos 8080 y 3128 (Sin contraseña).${NC}"
     sleep 3
@@ -271,8 +301,16 @@ function install_ws_python() {
     apt-get install -y python3 > /dev/null 2>&1
     mkdir -p /etc/gaming_vps
     
-    # Script Básico Pydic WS que inyecta en puerto 8888 y envía a Dropbear 80
-    cat > /etc/gaming_vps/ws.py << 'EOF'
+    echo -e -n "   ${CYAN}🔌 ¿En qué puerto abrirás el WebSocket? (Ej: 8888):${NC} "
+    read -r ws_port
+    [ -z "$ws_port" ] && ws_port=8888
+    
+    echo -e -n "   ${CYAN}🎯 ¿A qué puerto interno apuntará? (Ej: 80 - Tu Dropbear/SSH):${NC} "
+    read -r dest_port
+    [ -z "$dest_port" ] && dest_port=80
+    
+    # Script Básico Pydic WS
+    cat > /etc/gaming_vps/ws.py << EOF
 import socket, threading
 
 def forward(src, dst):
@@ -293,7 +331,7 @@ def handle_client(client_socket):
         client_socket.send(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
         
         remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        remote_socket.connect(('127.0.0.1', 80))
+        remote_socket.connect(('127.0.0.1', $dest_port))
         
         threading.Thread(target=forward, args=(client_socket, remote_socket)).start()
         threading.Thread(target=forward, args=(remote_socket, client_socket)).start()
@@ -302,7 +340,7 @@ def handle_client(client_socket):
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server.bind(('0.0.0.0', 8888))
+server.bind(('0.0.0.0', $ws_port))
 server.listen(100)
 while True:
     client_sock, addr = server.accept()
@@ -359,21 +397,21 @@ function install_wireguard() {
 function install_xray() {
     header
     echo -e "\n${CYAN}[*] Instalador Oficial Xray Core (Multiplexador TLS)...${NC}"
-    echo -e "${YELLOW}>> Se instalará Xray como CEREBRO MAESTRO en el puerto 443.${NC}"
-    sleep 3
-    apt-get update -y > /dev/null 2>&1
-    apt-get install -y jq uuid-runtime curl openssl > /dev/null 2>&1
-    
-    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install > /dev/null 2>&1
+    echo -e -n "   ${CYAN}🔌 ¿En qué puerto quieres instalar Xray VLESS? (Escoge uno libre, ej: 443):${NC} "
+    read -r xray_port
+    [ -z "$xray_port" ] && xray_port=443
     
     mkdir -p /usr/local/etc/xray
     
+    # Guardar puerto Xray internamente para la creación de usuarios
+    echo "$xray_port" > /usr/local/etc/xray/port.cfg
+    
     # Generar SSL Nativo para Xray
     openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
-      -subj "/C=US/ST=Gaming/L=Server/O=VPS/CN=XrayMultiplexer" \
+      -subj "/C=US/ST=Gaming/L=Server/O=VPS/CN=XrayVLESS" \
       -keyout /usr/local/etc/xray/xray.key -out /usr/local/etc/xray/xray.crt >/dev/null 2>&1
       
-    # Crear la configuración Maestra (Fallbacks)
+    # Crear la configuración VLESS Autónoma (Sin Fallbacks)
     cat > /usr/local/etc/xray/config.json <<EOF
 {
   "log": {
@@ -381,16 +419,11 @@ function install_xray() {
   },
   "inbounds": [
     {
-      "port": 443,
+      "port": $xray_port,
       "protocol": "vless",
       "settings": {
         "clients": [],
-        "decryption": "none",
-        "fallbacks": [
-          { "path": "/vless", "dest": 8081, "xver": 0 },
-          { "path": "/", "dest": 8888, "xver": 0 },
-          { "dest": 80, "xver": 0 }
-        ]
+        "decryption": "none"
       },
       "streamSettings": {
         "network": "tcp",
@@ -405,22 +438,6 @@ function install_xray() {
           ]
         }
       }
-    },
-    {
-      "port": 8081,
-      "listen": "127.0.0.1",
-      "protocol": "vless",
-      "settings": {
-        "clients": [],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "ws",
-        "security": "none",
-        "wsSettings": {
-          "path": "/vless"
-        }
-      }
     }
   ],
   "outbounds": [
@@ -433,8 +450,7 @@ EOF
     systemctl enable xray > /dev/null 2>&1
     systemctl restart xray > /dev/null 2>&1
     
-    echo -e "${GREEN}[✔] ¡Xray Multiplexador en el puerto 443 Activado!${NC}"
-    echo -e "${CYAN}>> VLESS TCP/TLS, VLESS WS, Payload HTTP-Custom y SSH-Stunnel todo en 443.${NC}"
+    echo -e "${GREEN}[✔] ¡Xray VLESS autónomo activado en el puerto $xray_port!${NC}"
     sleep 5
     return
 }
@@ -443,13 +459,13 @@ function services_menu() {
     while true; do
         header
         echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}P R O T O C O L O S   Y   T Ú N E L E S${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛠️  Dropbear SSH (Carga CPU baja | Puertos 80, 143)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🔒 Stunnel4 (Ocultar por SSL Legacy | Puerto 444)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🌐 Proxy Squid3 (Básico para inyecciones | 8080/3128)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}☁️  WebSocket Python (Para Cloudflare | Puerto 8888)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  OpenVPN Instalador Automático${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛠️  Dropbear SSH (Carga CPU baja)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🔒 Stunnel4 (Ocultar por SSL Legacy)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🌐 Proxy Squid3 (Básico para inyecciones)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}☁️  WebSocket Python (Para Cloudflare)${NC}"
+        echo -e "      ${CYAN}[${YELLOW}  5 ${CYAN}]${NC} ${BOLD}🛡️  OpenVPN Instalador Automático${NC}"
         echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}⚡ WireGuard Auto-Instalador (Low Ping UDP)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🦇 Xray Multiplexador TCP/WS/SSL (Puerto Maestro 443)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🦇 Xray VLESS Independiente (SNI Bug Carrier)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
@@ -746,31 +762,30 @@ function create_xray_user() {
     UUID=$(uuidgen)
     VPS_IP=$(curl -s ifconfig.me)
     
-    # Inyectar el usuario en los dos Inbounds simultáneos de Xray de forma segura mediante argumentos jq
-    jq --arg id "$UUID" --arg email "$xray_user" '.inbounds[0].settings.clients += [{"id": $id, "email": $email}] | .inbounds[1].settings.clients += [{"id": $id, "email": $email}]' /usr/local/etc/xray/config.json > /tmp/xray.json
+    # Leer el puerto donde fue instalado Xray
+    XRAY_PORT=$(cat /usr/local/etc/xray/port.cfg 2>/dev/null || echo "443")
+    
+    # Inyectar el usuario en Inbound principal
+    jq --arg id "$UUID" --arg email "$xray_user" '.inbounds[0].settings.clients += [{"id": $id, "email": $email}]' /usr/local/etc/xray/config.json > /tmp/xray.json
     cp /tmp/xray.json /usr/local/etc/xray/config.json
     rm -f /tmp/xray.json
     
     systemctl restart xray
     
-    # Generar Links VLESS (Puerto 443 para SNI Bug Carrier) con parámetro encryption=none para máxima compatibilidad
-    VLESS_WS="vless://${UUID}@${VPS_IP}:443?type=ws&encryption=none&security=tls&sni=${sni_bug}&host=${sni_bug}&path=%2Fvless#${xray_user}_WS"
-    VLESS_TCP="vless://${UUID}@${VPS_IP}:443?type=tcp&encryption=none&security=tls&sni=${sni_bug}#${xray_user}_TCP"
+    # Generar Links VLESS en base al puerto asignado
+    VLESS_TCP="vless://${UUID}@${VPS_IP}:${XRAY_PORT}?type=tcp&encryption=none&security=tls&sni=${sni_bug}#${xray_user}_TCP"
     
     echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${GREEN}[✔] Cliente VLESS Multiplexado Creado Exitosamente:${NC}\n"
+    echo -e "   ${GREEN}[✔] Cliente VLESS Creado Exitosamente:${NC}\n"
     
-    echo -e "   ${YELLOW}📡 Opción A: VLESS WebSocket (Recomendado para HTTP Custom / V2Ray):${NC}"
-    echo -e "   ${WHITE}${VLESS_WS}${NC}\n"
-    
-    echo -e "   ${YELLOW}🚀 Opción B: VLESS Puro TCP (Fast Gaming VPN en XTLS):${NC}"
+    echo -e "   ${YELLOW}🚀 VLESS Puro TCP (Fast Gaming VPN en XTLS):${NC}"
     echo -e "   ${WHITE}${VLESS_TCP}${NC}"
     
     echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
     if command -v qrencode &> /dev/null; then
-        echo -e "\n   ${CYAN}📱 QR de VLESS WebSocket (El más compatible):${NC}"
-        echo "${VLESS_WS}" | qrencode -t UTF8
+        echo -e "\n   ${CYAN}📱 QR de Conexión:${NC}"
+        echo "${VLESS_TCP}" | qrencode -t UTF8
     fi
     
     echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
@@ -1072,27 +1087,34 @@ function main_menu() {
         CPU_LOAD=${CPU_LOAD%.*} # Quitar decimales
         [ -z "$CPU_LOAD" ] && CPU_LOAD="0"
 
-        # Listar puertos abiertos nativos del script de forma estricta (Evita falsos positivos IPv6)
-        ACTIVOS=$(ss -tuln 2>/dev/null || netstat -tuln 2>/dev/null)
+        # Listar puertos abiertos nativos del script de forma dinámica
+        ACTIVOS=$(ss -tuln 2>/dev/null | awk 'NR>1 {print $5}' | awk -F: '{print $NF}' | sort -n | uniq)
         PUERTOS=""
-        echo "$ACTIVOS" | grep -E -q ":22\b" && PUERTOS+="22(SSH) "
         
-        # Agrupar puertos de Dropbear para ahorrar espacio visual
-        DROP=""
-        echo "$ACTIVOS" | grep -E -q ":80\b" && DROP+="80,"
-        echo "$ACTIVOS" | grep -E -q ":109\b" && DROP+="109,"
-        echo "$ACTIVOS" | grep -E -q ":143\b" && DROP+="143,"
-        if [ -n "$DROP" ]; then
-            DROP=${DROP%,}
-            PUERTOS+="${DROP}(Drop) "
-        fi
+        for p in $ACTIVOS; do
+            # Identificar ciertos servicios conocidos, sino solo mostrar puerto
+            if pgrep -f "dropbear.*-p $p" >/dev/null || [ "$p" == "80" ]; then
+                PUERTOS+="${p}(Drop) "
+            elif [ "$p" == "22" ] && pgrep sshd >/dev/null; then
+                PUERTOS+="22(SSH) "
+            elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "stunnel"; then
+                PUERTOS+="${p}(SSL) "
+            elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "squid"; then
+                PUERTOS+="${p}(Sqd) "
+            elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "python"; then
+                PUERTOS+="${p}(WS) "
+            elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "xray"; then
+                PUERTOS+="${p}(Xray) "
+            elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "badvpn"; then
+                PUERTOS+="${p}(VPN) "
+            elif [ "$p" == "51820" ]; then
+                PUERTOS+="51820(WG) "
+            else
+                # Si no lo identifica, solo pone el número
+                PUERTOS+="${p} "
+            fi
+        done
         
-        echo "$ACTIVOS" | grep -E -q ":443\b" && PUERTOS+="443(Xray) "
-        echo "$ACTIVOS" | grep -E -q ":444\b" && PUERTOS+="444(SSL) "
-        echo "$ACTIVOS" | grep -E -q ":445\b" && PUERTOS+="445(WS+SSL) "
-        echo "$ACTIVOS" | grep -E -q ":8888\b" && PUERTOS+="8888(WS) "
-        echo "$ACTIVOS" | grep -E -q ":7300\b" && PUERTOS+="7300(VPN) "
-        echo "$ACTIVOS" | grep -E -q ":51820\b" && PUERTOS+="51820(WG)"
         [ -z "$PUERTOS" ] && PUERTOS="Ninguno"
 
         header
