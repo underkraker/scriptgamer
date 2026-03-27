@@ -227,23 +227,42 @@ EOF
     return
 }
 
+function liberar_puerto() {
+    local PORT=$1
+    if ss -tuln 2>/dev/null | grep -q ":$PORT "; then
+        echo -e "\n${YELLOW}[!] El puerto $PORT actualmente está en uso. Deteniendo conflicto (Estilo ChumoGH)...${NC}"
+        # Identificar qué proceso lo tiene
+        PIDS=$(lsof -t -i:$PORT 2>/dev/null)
+        if [ -n "$PIDS" ]; then
+            # Detener servicios de systemd si coinciden
+            systemctl stop stunnel4 2>/dev/null
+            systemctl stop ws-python 2>/dev/null
+            kill -9 $PIDS 2>/dev/null
+        fi
+        sleep 2
+    fi
+}
+
 function install_stunnel() {
     echo -e "\n${CYAN}[*] Instalando y Configurando Stunnel4 (SSL/TLS para Bypass)...${NC}"
     apt-get update -y > /dev/null 2>&1
-    apt-get install -y stunnel4 > /dev/null 2>&1
+    apt-get install -y stunnel4 lsof > /dev/null 2>&1
     
     # Crear certificado SSL genérico (necesario para levantar Stunnel)
     openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
       -subj "/C=US/ST=Gaming/L=Server/O=VPS/CN=gamingVPS" \
       -keyout /etc/stunnel/stunnel.pem -out /etc/stunnel/stunnel.pem > /dev/null 2>&1
       
-    echo -e -n "   ${CYAN}🔌 ¿Qué puerto escuchará Stunnel? (Ej: 444):${NC} "
+    echo -e -n "   ${CYAN}🔌 ¿Qué puerto escuchará Stunnel? (Ej: 443):${NC} "
     read -r listen_port
-    [ -z "$listen_port" ] && listen_port=444
+    [ -z "$listen_port" ] && listen_port=443
     
     echo -e -n "   ${CYAN}🎯 ¿A qué puerto interno redirigirá? (Ej: 80 - Tu puerto Dropbear o SSH):${NC} "
     read -r dest_port
     [ -z "$dest_port" ] && dest_port=80
+    
+    # Liberar el puerto si otro servicio (ej WebSocket) ya lo está usando
+    liberar_puerto $listen_port
     
     # Configurar stunnel.conf (Sin PID forzado para evitar conflictos en Ubuntu 24.04)
     cat > /etc/stunnel/stunnel.conf <<EOF
@@ -263,8 +282,7 @@ EOF
     systemctl enable stunnel4 > /dev/null 2>&1
     systemctl restart stunnel4 > /dev/null 2>&1
     
-    echo -e "${GREEN}[✔] Stunnel configurado. (Puerto SSL 444 -> Redirigido a Puerto 80).${NC}"
-    echo -e "${YELLOW}>> El puerto 443 ahora es exclusivo del Multiplexador Xray maestro.${NC}"
+    echo -e "${GREEN}[✔] Stunnel configurado. (Puerto SSL $listen_port -> Redirigido a Puerto $dest_port).${NC}"
     sleep 3
     return
 }
@@ -298,16 +316,19 @@ function install_ws_python() {
     header
     echo -e "\n${CYAN}[*] Instalando Websocket Python (Cloudflare Payload)...${NC}"
     apt-get update -y > /dev/null 2>&1
-    apt-get install -y python3 > /dev/null 2>&1
+    apt-get install -y python3 lsof > /dev/null 2>&1
     mkdir -p /etc/gaming_vps
     
-    echo -e -n "   ${CYAN}🔌 ¿En qué puerto abrirás el WebSocket? (Ej: 8888):${NC} "
+    echo -e -n "   ${CYAN}🔌 ¿En qué puerto abrirás el WebSocket? (Ej: 80 u 443):${NC} "
     read -r ws_port
-    [ -z "$ws_port" ] && ws_port=8888
+    [ -z "$ws_port" ] && ws_port=80
     
-    echo -e -n "   ${CYAN}🎯 ¿A qué puerto interno apuntará? (Ej: 80 - Tu Dropbear/SSH):${NC} "
+    echo -e -n "   ${CYAN}🎯 ¿A qué puerto interno apuntará? (Ej: 22 - Tu Dropbear/SSH):${NC} "
     read -r dest_port
-    [ -z "$dest_port" ] && dest_port=80
+    [ -z "$dest_port" ] && dest_port=22
+    
+    # Liberar el puerto si otro servicio (ej SSL) ya lo está usando
+    liberar_puerto $ws_port
     
     # Script WS Proxy Mejorado (Estilo ChumoGH)
     cat > /etc/gaming_vps/ws.py << EOF
@@ -373,7 +394,7 @@ EOF
     systemctl daemon-reload > /dev/null 2>&1
     systemctl enable ws-python > /dev/null 2>&1
     systemctl restart ws-python > /dev/null 2>&1
-    echo -e "${GREEN}[✔] WebSocket Python activado (Puerto 8888 -> SSH 80).${NC}"
+    echo -e "${GREEN}[✔] WebSocket Python activado (Puerto $ws_port -> Interno $dest_port).${NC}"
     sleep 3
     return
 }
