@@ -589,7 +589,45 @@ function list_ssh_users() {
 
 function delete_user() {
     header
-}el --force "$username" > /dev/null 2>&1
+    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}E L I M I N A R   U S U A R I O${NC} ${MAGENTA}❖${NC}\n"
+    
+    # Obtener lista de usuarios
+    users=($(ls /etc/gaming_vps/*.limit 2>/dev/null | sed 's/.*\///;s/\.limit//'))
+    
+    if [ ${#users[@]} -eq 0 ]; then
+        echo -e "   ${YELLOW}No hay usuarios registrados actualmente.${NC}"
+        sleep 3
+        return
+    fi
+    
+    echo -e "   ${CYAN}Lista de usuarios activos:${NC}"
+    for i in "${!users[@]}"; do
+        echo -e "      ${CYAN}[${YELLOW} $((i+1)) ${CYAN}]${NC} ${WHITE}${users[$i]}${NC}"
+    done
+    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}Cancelar operacion${NC}\n"
+    
+    echo -e -n "   ${WHITE}${BOLD}📝 Escribe el NÚMERO del usuario a eliminar:${NC} "
+    read opt
+    
+    if [[ "$opt" == "0" ]] || [[ -z "$opt" ]]; then
+        return
+    fi
+    
+    # Validar que sea un número válido
+    if ! [[ "$opt" =~ ^[0-9]+$ ]] || [ "$opt" -lt 1 ] || [ "$opt" -gt "${#users[@]}" ]; then
+        echo -e "\n   ${RED}[x] Opción inválida.${NC}"
+        sleep 2
+        return
+    fi
+    
+    # Obtener el nombre del usuario seleccionado
+    username="${users[$((opt-1))]}"
+    
+    # Proceder a eliminar
+    echo -e "\n   ${YELLOW}⏳ Eliminando usuario '$username'...${NC}"
+    if id "$username" &>/dev/null; then
+        pkill -u "$username" > /dev/null 2>&1
+        userdel --force "$username" > /dev/null 2>&1
         rm -f "/etc/gaming_vps/$username.limit" 2>/dev/null
         echo -e "   ${GREEN}[✔] Usuario '$username' eliminado correctamente del VPS.${NC}"
     else
@@ -598,9 +636,6 @@ function delete_user() {
     sleep 3
     return
 }
-
-
-
 
 function users_menu() {
     while true; do
