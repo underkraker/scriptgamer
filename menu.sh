@@ -710,15 +710,15 @@ function create_xray_user() {
     VPS_IP=$(curl -s ifconfig.me)
     
     # Inyectar el usuario en los dos Inbounds simultáneos de Xray (TCP Nativo y Websocket Local)
-    jq '.inbounds[0].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'"}] | .inbounds[1].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'"}]' /usr/local/etc/xray/config.json > /tmp/xray.json
+    jq '.inbounds[0].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'", "encryption": "none"}] | .inbounds[1].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'", "encryption": "none"}]' /usr/local/etc/xray/config.json > /tmp/xray.json
     cp /tmp/xray.json /usr/local/etc/xray/config.json
     rm -f /tmp/xray.json
     
     systemctl restart xray
     
-    # Generar Links VLESS (Puerto 443 para SNI Bug Carrier)
-    VLESS_WS="vless://${UUID}@${VPS_IP}:443?type=ws&path=%2Fvless&host=${sni_bug}&security=tls&sni=${sni_bug}#${xray_user}_WS"
-    VLESS_TCP="vless://${UUID}@${VPS_IP}:443?type=tcp&security=tls&sni=${sni_bug}#${xray_user}_TCP"
+    # Generar Links VLESS (Puerto 443 para SNI Bug Carrier) con parámetro encryption=none para máxima compatibilidad
+    VLESS_WS="vless://${UUID}@${VPS_IP}:443?type=ws&encryption=none&security=tls&sni=${sni_bug}&host=${sni_bug}&path=%2Fvless#${xray_user}_WS"
+    VLESS_TCP="vless://${UUID}@${VPS_IP}:443?type=tcp&encryption=none&security=tls&sni=${sni_bug}#${xray_user}_TCP"
     
     echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "   ${GREEN}[✔] Cliente VLESS Multiplexado Creado Exitosamente:${NC}\n"
