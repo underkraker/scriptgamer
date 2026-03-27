@@ -219,7 +219,7 @@ socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 
 [dropbear-ssl]
-accept = 443
+accept = 444
 connect = 127.0.0.1:80
 EOF
     
@@ -229,7 +229,8 @@ EOF
     systemctl enable stunnel4 > /dev/null 2>&1
     systemctl restart stunnel4 > /dev/null 2>&1
     
-    echo -e "${GREEN}[✔] Stunnel configurado. (Puerto SSL 443 -> Redirigido a Puerto 80).${NC}"
+    echo -e "${GREEN}[✔] Stunnel configurado. (Puerto SSL 444 -> Redirigido a Puerto 80).${NC}"
+    echo -e "${YELLOW}>> El puerto 443 ahora es exclusivo del Multiplexador Xray maestro.${NC}"
     sleep 3
     return
 }
@@ -350,16 +351,22 @@ function install_wireguard() {
 
 function install_xray() {
     header
-    echo -e "\n${CYAN}[*] Instalador Oficial Xray Core (Vmess/Vless/Trojan)...${NC}"
-    echo -e "${YELLOW}>> Se descargará el script oficial de XTLS-Xray y se configurará VLESS.${NC}"
+    echo -e "\n${CYAN}[*] Instalador Oficial Xray Core (Multiplexador TLS)...${NC}"
+    echo -e "${YELLOW}>> Se instalará Xray como CEREBRO MAESTRO en el puerto 443.${NC}"
     sleep 3
     apt-get update -y > /dev/null 2>&1
-    apt-get install -y jq uuid-runtime curl > /dev/null 2>&1
+    apt-get install -y jq uuid-runtime curl openssl > /dev/null 2>&1
     
     bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install > /dev/null 2>&1
     
-    # Crear la configuración base automática para VLESS WS en puerto 8081
     mkdir -p /usr/local/etc/xray
+    
+    # Generar SSL Nativo para Xray
+    openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
+      -subj "/C=US/ST=Gaming/L=Server/O=VPS/CN=XrayMultiplexer" \
+      -keyout /usr/local/etc/xray/xray.key -out /usr/local/etc/xray/xray.crt >/dev/null 2>&1
+      
+    # Crear la configuración Maestra (Fallbacks)
     cat > /usr/local/etc/xray/config.json <<EOF
 {
   "log": {
@@ -367,8 +374,34 @@ function install_xray() {
   },
   "inbounds": [
     {
+      "port": 443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none",
+        "fallbacks": [
+          { "path": "/vless", "dest": 8081, "xver": 0 },
+          { "path": "/", "dest": 8888, "xver": 0 },
+          { "dest": 80, "xver": 0 }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "alpn": ["http/1.1"],
+          "certificates": [
+            {
+              "certificateFile": "/usr/local/etc/xray/xray.crt",
+              "keyFile": "/usr/local/etc/xray/xray.key"
+            }
+          ]
+        }
+      }
+    },
+    {
       "port": 8081,
-      "listen": "0.0.0.0",
+      "listen": "127.0.0.1",
       "protocol": "vless",
       "settings": {
         "clients": [],
@@ -376,8 +409,9 @@ function install_xray() {
       },
       "streamSettings": {
         "network": "ws",
+        "security": "none",
         "wsSettings": {
-          "path": "/xray"
+          "path": "/vless"
         }
       }
     }
@@ -392,9 +426,9 @@ EOF
     systemctl enable xray > /dev/null 2>&1
     systemctl restart xray > /dev/null 2>&1
     
-    echo -e "${GREEN}[✔] Xray Core y Perfil Base VLESS instalados en el puerto 8081.${NC}"
-    echo -e "Ya puedes generar links VLESS desde el apartado de Gestión de Usuarios."
-    sleep 4
+    echo -e "${GREEN}[✔] ¡Xray Multiplexador en el puerto 443 Activado!${NC}"
+    echo -e "${CYAN}>> VLESS TCP/TLS, VLESS WS, Payload HTTP-Custom y SSH-Stunnel todo en 443.${NC}"
+    sleep 5
     return
 }
 
@@ -403,12 +437,12 @@ function services_menu() {
         header
         echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}P R O T O C O L O S   Y   T Ú N E L E S${NC} ${MAGENTA}❖${NC}\n"
         echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛠️  Dropbear SSH (Carga CPU baja | Puertos 80, 143)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🔒 Stunnel4 (Ocultar por SSL y SNI | Puerto 443)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🔒 Stunnel4 (Ocultar por SSL Legacy | Puerto 444)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🌐 Proxy Squid3 (Básico para inyecciones | 8080/3128)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}☁️  WebSocket Python (Para Cloudflare | Puerto 8888)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  OpenVPN Instalador Automático${NC}"
         echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}⚡ WireGuard Auto-Instalador (Low Ping UDP)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🦇 Xray Core Oficial (Vmess/Vless/Trojan)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🦇 Xray Multiplexador TCP/WS/SSL (Puerto Maestro 443)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
@@ -675,24 +709,31 @@ function create_xray_user() {
     UUID=$(uuidgen)
     VPS_IP=$(curl -s ifconfig.me)
     
-    jq '.inbounds[0].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'"}]' /usr/local/etc/xray/config.json > /tmp/xray.json
+    # Inyectar el usuario en los dos Inbounds simultáneos de Xray (TCP Nativo y Websocket Local)
+    jq '.inbounds[0].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'"}] | .inbounds[1].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'"}]' /usr/local/etc/xray/config.json > /tmp/xray.json
     cp /tmp/xray.json /usr/local/etc/xray/config.json
     rm -f /tmp/xray.json
     
     systemctl restart xray
     
-    # Generar Link VLESS Formatado Universal
-    VLESS_LINK="vless://${UUID}@${VPS_IP}:8081?type=ws&path=%2Fxray&host=${sni_bug}&security=none#${xray_user}"
+    # Generar Links VLESS (Puerto 443 para SNI Bug Carrier)
+    VLESS_WS="vless://${UUID}@${VPS_IP}:443?type=ws&path=%2Fvless&host=${sni_bug}&security=tls&sni=${sni_bug}#${xray_user}_WS"
+    VLESS_TCP="vless://${UUID}@${VPS_IP}:443?type=tcp&security=tls&sni=${sni_bug}#${xray_user}_TCP"
     
     echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${GREEN}[✔] Cliente VLESS SNI Creado Exitosamente:${NC}\n"
-    echo -e "   ${YELLOW}Úsalo en HTTP Custom, HTTP Injector, V2Ray o tu inyector favorito:${NC}\n"
-    echo -e "   ${WHITE}${VLESS_LINK}${NC}"
-    echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${GREEN}[✔] Cliente VLESS Multiplexado Creado Exitosamente:${NC}\n"
+    
+    echo -e "   ${YELLOW}📡 Opción A: VLESS WebSocket (Recomendado para HTTP Custom / V2Ray):${NC}"
+    echo -e "   ${WHITE}${VLESS_WS}${NC}\n"
+    
+    echo -e "   ${YELLOW}🚀 Opción B: VLESS Puro TCP (Fast Gaming VPN en XTLS):${NC}"
+    echo -e "   ${WHITE}${VLESS_TCP}${NC}"
+    
+    echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
     if command -v qrencode &> /dev/null; then
-        echo -e "\n   ${CYAN}📱 Código QR del enlace (Escanea desde la App):${NC}"
-        echo "${VLESS_LINK}" | qrencode -t UTF8
+        echo -e "\n   ${CYAN}📱 QR de VLESS WebSocket (El más compatible):${NC}"
+        echo "${VLESS_WS}" | qrencode -t UTF8
     fi
     
     echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
