@@ -973,12 +973,21 @@ function main_menu() {
         ACTIVOS=$(ss -tuln 2>/dev/null | awk 'NR>1 {print $5}' | awk -F: '{print $NF}' | sort -n | uniq)
         PUERTOS=""
         
+        # Listar puertos abiertos dinámicos, excluyendo basura del sistema
+        ACTIVOS=$(ss -tuln 2>/dev/null | awk 'NR>1 {print $5}' | awk -F: '{print $NF}' | sort -n | uniq)
+        PUERTOS=""
+        
         for p in $ACTIVOS; do
-            # Identificar ciertos servicios conocidos, sino solo mostrar puerto
+            # Filtros de puertos basura nativos de linux o randoms internos (>30000)
+            if [ "$p" -eq 53 ] || [ "$p" -eq 68 ] || [ "$p" -eq 323 ] || [ "$p" -eq 111 ] || [ "$p" -gt 32000 ]; then
+                continue
+            fi
+            
+            # Identificar ciertos servicios conocidos
             if pgrep -f "dropbear.*-p $p" >/dev/null || [ "$p" == "80" ]; then
                 PUERTOS+="${p}(Drop) "
             elif [ "$p" == "22" ] && pgrep sshd >/dev/null; then
-                PUERTOS+="22(SSH) "
+                PUERTOS+="${p}(SSH) "
             elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "stunnel"; then
                 PUERTOS+="${p}(SSL) "
             elif netstat -tulnp 2>/dev/null | grep ":$p " | grep -q "squid"; then
@@ -989,9 +998,6 @@ function main_menu() {
                 PUERTOS+="${p}(VPN) "
             elif [ "$p" == "51820" ]; then
                 PUERTOS+="51820(WG) "
-            else
-                # Si no lo identifica, solo pone el número
-                PUERTOS+="${p} "
             fi
         done
         
