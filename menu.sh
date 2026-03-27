@@ -39,15 +39,35 @@ function header() {
 # ============== PARTE 2: OPTIMIZACIÓN GAMING ==============
 function install_bbr() {
     echo -e "\n${CYAN}[*] Instalando y Configurando Google TCP BBR...${NC}"
+    
+    # Cargar el módulo explícitamente en el Kernel actual
+    modprobe tcp_bbr > /dev/null 2>&1
+    
+    # Asegurar que el módulo cargue tras reiniciar
+    if [ -f /etc/modules-load.d/modules.conf ] && ! grep -q "tcp_bbr" /etc/modules-load.d/modules.conf; then
+        echo "tcp_bbr" >> /etc/modules-load.d/modules.conf
+    elif [ -f /etc/modules ] && ! grep -q "tcp_bbr" /etc/modules; then
+        echo "tcp_bbr" >> /etc/modules
+    fi
+    
     # Se eliminan configuraciones antiguas
     sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
     sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
-    # Se inyectan las nuevas para bajar el ping
+    
+    # Se inyectan las nuevas TCP BBR Limits
     echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
     echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
     sysctl -p > /dev/null 2>&1
-    echo -e "${GREEN}[✔] TCP BBR (Acelerador de red) activado con éxito.${NC}"
-    sleep 2
+    
+    # Verificación estricta (Evita falsos positivos en VPS OpenVZ/LXC)
+    if sysctl net.ipv4.tcp_congestion_control 2>/dev/null | grep -q "bbr" || lsmod 2>/dev/null | grep -q "bbr"; then
+        echo -e "${GREEN}[✔] TCP BBR (Acelerador de red) activado con éxito.${NC}"
+    else
+        echo -e "${RED}[x] Falla Crítica: TCP BBR no se activó.${NC}"
+        echo -e "${YELLOW}🚨 Nota: Es probable que tu servidor sea tipo OpenVZ o LXC.${NC}"
+        echo -e "${YELLOW}Solo las VPS tipo KVM, VMware o BareMetal soportan modificaciones al Kernel (como BBR).${NC}"
+    fi
+    sleep 4
     return
 }
 
