@@ -589,31 +589,6 @@ function list_ssh_users() {
 
 function delete_user() {
     header
-    echo function users_menu() {
-    while true; do
-        header
-        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}G E S T I O N   D E   C L I E N T E S${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}➕ Crear Cliente SSH (Pase Temporal)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}➖ Eliminar y Desconectar Cliente SSH${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}👥 Ver Detalles y Límite de Clientes SSH${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    
-        echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas hacer?:${NC} "
-        read opt
-
-        case $opt in
-            1) create_user ;;
-            2) delete_user ;;
-            3) list_ssh_users ;;
-            0) return ;;
-            *) 
-                echo -e "${RED}❌ Opción no válida.${NC}"
-                sleep 1
-                continue 
-                ;;
-        esac
-    done
 }el --force "$username" > /dev/null 2>&1
         rm -f "/etc/gaming_vps/$username.limit" 2>/dev/null
         echo -e "   ${GREEN}[✔] Usuario '$username' eliminado correctamente del VPS.${NC}"
