@@ -21,19 +21,19 @@ fi
 # Función para mostrar el encabezado VIP
 function header() {
     clear
-    echo -e "${CYAN}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║${MAGENTA}  ██████╗  █████╗ ███╗   ███╗███████╗██████╗           ${CYAN}║${NC}"
-    echo -e "${CYAN}║${MAGENTA} ██╔════╝ ██╔══██╗████╗ ████║██╔════╝██╔══██╗          ${CYAN}║${NC}"
-    echo -e "${CYAN}║${MAGENTA} ██║  ███╗███████║██╔████╔██║█████╗  ██████╔╝          ${CYAN}║${NC}"
-    echo -e "${CYAN}║${MAGENTA} ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ██╔══██╗          ${CYAN}║${NC}"
-    echo -e "${CYAN}║${MAGENTA} ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗██║  ██║          ${CYAN}║${NC}"
-    echo -e "${CYAN}║${MAGENTA}  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝          ${CYAN}║${NC}"
-    echo -e "${CYAN}╠══════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${CYAN}║${YELLOW}${BOLD}           V P S   P A N E L   -   E X P E R T         ${CYAN}║${NC}"
-    echo -e "${CYAN}╠══════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${CYAN}║${GREEN}  ⚡ Optimizador Ping | 🛡️ Anti-DDoS | 🦇 Multi-Túnel  ${CYAN}║${NC}"
-    echo -e "${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
-    echo -e ""
+    echo -e "\n"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "    ${MAGENTA}██████╗  █████╗ ███╗   ███╗███████╗██████╗${NC}"
+    echo -e "   ${MAGENTA}██╔════╝ ██╔══██╗████╗ ████║██╔════╝██╔══██╗${NC}"
+    echo -e "   ${MAGENTA}██║  ███╗███████║██╔████╔██║█████╗  ██████╔╝${NC}"
+    echo -e "   ${MAGENTA}██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ██╔══██╗${NC}"
+    echo -e "   ${MAGENTA}╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗██║  ██║${NC}"
+    echo -e "    ${MAGENTA}╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝${NC}"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "         ${WHITE}${BOLD}🔥  V P S   P A N E L   P R O  🔥${NC}"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "     ${GREEN}⚡ Ping Optimizer    🛡️ Anti-DDoS    🦇 Multi-Tunnel${NC}"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 }
 
 # ============== PARTE 2: OPTIMIZACIÓN GAMING ==============
@@ -114,14 +114,14 @@ function open_internal_ports() {
 
 function optimizer_menu() {
     header
-    echo -e "\n${CYAN}   ░▒▓ 🚀 OPTIMIZACIÓN GAMING 🚀 ▓▒░${NC}\n"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[1]${NC} ➔ 🌐 Activar Acelerador TCP BBR de Google"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[2]${NC} ➔ 🎮 Instalar BadVPN (Comunicaciones UDP)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[3]${NC} ➔ 🔓 Purgar y Abrir Puertos Internos (UFW)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[0]${NC} ➔ 🔙 Regresar al Menú Inicial"
-    echo -e "\n${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}O P T I M I Z A C I Ó N   G A M I N G${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🌐 Activar Acelerador TCP BBR de Google${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🎮 Instalar BadVPN (Comunicaciones UDP)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🔓 Purgar y Abrir Puertos Internos (UFW)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "🎮 ${BOLD}¿Qué deseas hacer?:${NC} "
+    echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas hacer?:${NC} "
     read opt
 
     case $opt in
@@ -322,18 +322,18 @@ function install_xray() {
 
 function services_menu() {
     header
-    echo -e "\n${CYAN}   ░▒▓ ⚙️  MULTI-PROTOCOLOS Y SERVICIOS ⚙️  ▓▒░${NC}\n"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[1]${NC} ➔ 🛠️  Dropbear SSH (Carga CPU baja | Puertos 80, 143)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[2]${NC} ➔ 🔒 Stunnel4 (Ocultar por SSL y SNI | Puerto 443)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[3]${NC} ➔ 🌐 Proxy Squid3 (Básico para inyecciones | 8080/3128)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[4]${NC} ➔ ☁️  WebSocket Python (Para Cloudflare | Puerto 8888)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[5]${NC} ➔ 🛡️  OpenVPN Instalador Automático"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[6]${NC} ➔ ⚡ WireGuard Auto-Instalador (Low Ping UDP)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[7]${NC} ➔ 🦇 Xray Core Oficial (Vmess/Vless/Trojan)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[0]${NC} ➔ 🔙 Regresar al Menú Inicial"
-    echo -e "\n${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}P R O T O C O L O S   Y   T Ú N E L E S${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛠️  Dropbear SSH (Carga CPU baja | Puertos 80, 143)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🔒 Stunnel4 (Ocultar por SSL y SNI | Puerto 443)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🌐 Proxy Squid3 (Básico para inyecciones | 8080/3128)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}☁️  WebSocket Python (Para Cloudflare | Puerto 8888)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  OpenVPN Instalador Automático${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}⚡ WireGuard Auto-Instalador (Low Ping UDP)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🦇 Xray Core Oficial (Vmess/Vless/Trojan)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "🎮 ${BOLD}¿Qué deseas instalar?:${NC} "
+    echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas instalar?:${NC} "
     read opt
 
     case $opt in
@@ -357,8 +357,8 @@ function services_menu() {
 # ============== PARTE 4: GESTIÓN DE USUARIOS ==============
 function create_user() {
     header
-    echo -e "\n${CYAN}>>> ➕ CREAR NUEVO USUARIO (GAMING/SSH) <<<${NC}\n"
-    echo -e -n "👤 ${BOLD}Nombre de usuario:${NC} "
+    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}C R E A R   N U E V O   U S U A R I O${NC} ${MAGENTA}❖${NC}\n"
+    echo -e -n "   ${CYAN}👤 Nombre de usuario:${NC} "
     read username
     
     # Verificar si el usuario ya existe
@@ -369,11 +369,11 @@ function create_user() {
         return
     fi
     
-    echo -e -n "🔑 ${BOLD}Contraseña:${NC} "
+    echo -e -n "   ${CYAN}🔑 Contraseña:${NC} "
     read password
-    echo -e -n "⏳ ${BOLD}Días de duración (ej. 30):${NC} "
+    echo -e -n "   ${CYAN}⏳ Días de duración (ej. 30):${NC} "
     read days
-    echo -e -n "🔄 ${BOLD}Límite de conexiones simultáneas (ej. 1):${NC} "
+    echo -e -n "   ${CYAN}🔄 Límite de conexiones simultáneas (ej. 1):${NC} "
     read limit
     
     # Asegurar que /bin/false sea un shell válido para Dropbear/OpenSSH (Evita error de 'Contraseña Incorrecta')
@@ -389,23 +389,23 @@ function create_user() {
     mkdir -p /etc/gaming_vps
     echo "$limit" > "/etc/gaming_vps/$username.limit"
     
-    echo -e "\n${GREEN}==========================================${NC}"
-    echo -e "${GREEN}[✔] Usuario Premium Creado Exitosamente:${NC}"
-    echo -e "   - Usuario: ${BOLD}$username${NC}"
-    echo -e "   - Pass   : ${BOLD}$password${NC}"
-    echo -e "   - Expira : ${BOLD}$days días${NC}"
-    echo -e "   - Límite : ${BOLD}$limit conexión(es)${NC}"
-    echo -e "${GREEN}==========================================${NC}"
+    echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${GREEN}[✔] Usuario Premium Creado Exitosamente:${NC}\n"
+    echo -e "      ${CYAN}👤 Usuario :${NC} ${WHITE}${BOLD}$username${NC}"
+    echo -e "      ${CYAN}🔑 Pass    :${NC} ${WHITE}${BOLD}$password${NC}"
+    echo -e "      ${CYAN}⏳ Expira  :${NC} ${WHITE}${BOLD}$days días${NC}"
+    echo -e "      ${CYAN}🔄 Límite  :${NC} ${WHITE}${BOLD}$limit conexión(es)${NC}\n"
+    echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e "\nPresiona ENTER para volver al menú de usuarios..."
+    echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
     read enter
     users_menu
 }
 
 function delete_user() {
     header
-    echo -e "\n${CYAN}>>> ➖ ELIMINAR USUARIO <<<${NC}\n"
-    echo -e -n "👤 ${BOLD}Nombre de usuario a eliminar:${NC} "
+    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}E L I M I N A R   U S U A R I O${NC} ${MAGENTA}❖${NC}\n"
+    echo -e -n "   ${CYAN}👤 Nombre de usuario a eliminar:${NC} "
     read username
     
     if id "$username" &>/dev/null; then
@@ -422,13 +422,13 @@ function delete_user() {
 
 function users_menu() {
     header
-    echo -e "\n${CYAN}   ░▒▓ 👤 GESTIÓN DE USUARIOS VIP 👤 ▓▒░${NC}\n"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[1]${NC} ➔ ➕ Crear Cliente con Autorización Temporal"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[2]${NC} ➔ ➖ Eliminar y Desconectar Cliente"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[0]${NC} ➔ 🔙 Regresar al Menú Inicial"
-    echo -e "\n${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}G E S T I Ó N   D E   C L I E N T E S${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}➕ Crear Cliente con Autorización Temporal${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}➖ Eliminar y Desconectar Cliente${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "🎮 ${BOLD}¿Qué deseas hacer?:${NC} "
+    echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas hacer?:${NC} "
     read opt
 
     case $opt in
@@ -447,7 +447,7 @@ function users_menu() {
 # ============== PARTE 5: MONITOR DE RECURSOS ==============
 function show_system_stats() {
     header
-    echo -e "\n${CYAN}>>> 📊 ESTADO DEL SERVIDOR VPS <<<${NC}\n"
+    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}E S T A D O   D E L   S E R V I D O R${NC} ${MAGENTA}❖${NC}\n"
     
     # Obtener Uso de CPU (cálculo simplificado de top)
     cpu_load=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
@@ -460,12 +460,12 @@ function show_system_stats() {
     ping_google=$(ping -c 1 8.8.8.8 | grep 'time=' | awk '{print $8}' | sed 's/time=//')
     if [ -z "$ping_google" ]; then ping_google="N/A"; fi
 
-    echo -e "   🧠 CPU Usada : ${BOLD}${cpu_load}%${NC}"
-    echo -e "   💾 RAM Usada : ${BOLD}${ram_used} MB / ${ram_total} MB${NC}"
-    echo -e "   🌐 Latencia  : ${BOLD}${ping_google} ms${NC} (Desde la VPS hacia afuera)"
+    echo -e "      ${CYAN}[🧠]${NC} ${BOLD}CPU Usada : ${WHITE}${cpu_load}%${NC}"
+    echo -e "      ${CYAN}[💾]${NC} ${BOLD}RAM Usada : ${WHITE}${ram_used} MB / ${ram_total} MB${NC}"
+    echo -e "      ${CYAN}[🌐]${NC} ${BOLD}Latencia  : ${WHITE}${ping_google} ms${NC} (Desde VPS hacia afuera)\n"
     
-    echo -e "\n${CYAN}======================================================${NC}"
-    echo -e "Presiona ENTER para regresar..."
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${WHITE}Presiona ENTER para regresar...${NC}"
     read enter
     monitor_menu
 }
@@ -477,23 +477,23 @@ function clear_ram() {
     sync
     echo 3 > /proc/sys/vm/drop_caches
     sleep 2
-    echo -e "${GREEN}======================================================${NC}"
-    echo -e "${GREEN}[✔] Memoria RAM Liberada con éxito.${NC}"
-    echo -e "${GREEN}[✔] Rutas de red purgadas. Esto reducirá micro-cortes.${NC}"
-    echo -e "${GREEN}======================================================${NC}"
+    echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${GREEN}[✔] Memoria RAM Liberada con éxito.${NC}"
+    echo -e "   ${GREEN}[✔] Rutas de red purgadas. Esto reducirá micro-cortes.${NC}"
+    echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     sleep 3
     monitor_menu
 }
 
 function monitor_menu() {
     header
-    echo -e "\n${CYAN}   ░▒▓ 📊 MONITORIZACIÓN Y ESTADO 📊 ▓▒░${NC}\n"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[1]${NC} ➔ 📈 Ver Estado en Vivo (CPU, RAM, Latencia)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[2]${NC} ➔ 🧹 Forzar Limpieza de Memoria RAM"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[0]${NC} ➔ 🔙 Regresar al Menú Inicial"
-    echo -e "\n${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M O N I T O R I Z A C I Ó N${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}📈 Ver Estado en Vivo (CPU, RAM, Latencia)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🧹 Forzar Limpieza de Memoria RAM${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "🎮 ${BOLD}Selecciona una opción:${NC} "
+    echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción:${NC} "
     read opt
 
     case $opt in
@@ -589,14 +589,14 @@ EOF
 
 function security_menu() {
     header
-    echo -e "\n${CYAN}   ░▒▓ 🛡️  SEGURIDAD EXPERTA Y ANTI-ABUSO 🛡️  ▓▒░${NC}\n"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[1]${NC} ➔ 🛑 Bloquear Tráfico Torrent (Protección Web)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[2]${NC} ➔ ⏱️  Activar Tarea de Limpieza Automática (6 hrs)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[3]${NC} ➔ ✂️  Activar Watchdog Auto-Kill (Anti Multi-Login)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[0]${NC} ➔ 🔙 Regresar al Menú Inicial"
-    echo -e "\n${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}S E G U R I D A D   Y   A N T I - A B U S O${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛑 Bloquear Tráfico Torrent (Protección Web)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}⏱️  Activar Tarea de Limpieza Automática (6 hrs)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}✂️  Activar Watchdog Auto-Kill (Anti Multi-Login)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "🎮 ${BOLD}Selecciona una opción de seguridad:${NC} "
+    echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción de seguridad:${NC} "
     read opt
 
     case $opt in
@@ -616,16 +616,16 @@ function security_menu() {
 # Función para mostrar el panel principal
 function main_menu() {
     header
-    echo -e "\n${CYAN}   ░▒▓ 💠 PANEL DE CONTROL PRINCIPAL 💠 ▓▒░${NC}\n"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[1]${NC} ➔ 👤 Gestor de Usuarios VIP"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[2]${NC} ➔ 🚀 Acelerador y Optimización de Red"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[3]${NC} ➔ ⚙️ Instalador de Protocolos y Túneles"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[4]${NC} ➔ 📊 Monitor del Servidor (RAM/CPU/Ping)"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[5]${NC} ➔ 🛡️  Módulo de Seguridad Extrema"
-    echo -e "  ${MAGENTA}❖${NC} ${YELLOW}[0]${NC} ➔ ❌ Cerrar Sesión"
-    echo -e "\n${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M E N Ú   P R I N C I P A L${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}👤 Gestor de Usuarios VIP${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🚀 Acelerador y Optimización de Red${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}⚙️  Instalador de Protocolos y Túneles${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}📊 Monitor de Recursos (RAM/CPU/Ping)${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  Módulo de Seguridad y Anti-Abusos${NC}"
+    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}❌ Cerrar Sesión${NC}\n"
+    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "🎮 ${BOLD}Selecciona una opción:${NC} "
+    echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción del panel:${NC} "
     read option
 
     case $option in
