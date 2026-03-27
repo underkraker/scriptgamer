@@ -1071,15 +1071,23 @@ function main_menu() {
         ACTIVOS=$(ss -tuln 2>/dev/null || netstat -tuln 2>/dev/null)
         PUERTOS=""
         echo "$ACTIVOS" | grep -q ":22 " && PUERTOS+="22(SSH) "
-        echo "$ACTIVOS" | grep -q ":80 " && PUERTOS+="80(Dropbear) "
-        echo "$ACTIVOS" | grep -q ":109 " && PUERTOS+="109(Dropbear) "
-        echo "$ACTIVOS" | grep -q ":143 " && PUERTOS+="143(Dropbear) "
+        
+        # Agrupar puertos de Dropbear para ahorrar espacio visual
+        DROP=""
+        echo "$ACTIVOS" | grep -q ":80 " && DROP+="80,"
+        echo "$ACTIVOS" | grep -q ":109 " && DROP+="109,"
+        echo "$ACTIVOS" | grep -q ":143 " && DROP+="143,"
+        if [ -n "$DROP" ]; then
+            DROP=${DROP%,}
+            PUERTOS+="${DROP}(Drop) "
+        fi
+        
         echo "$ACTIVOS" | grep -q ":443 " && PUERTOS+="443(Xray) "
         echo "$ACTIVOS" | grep -q ":444 " && PUERTOS+="444(SSL) "
         echo "$ACTIVOS" | grep -q ":8888 " && PUERTOS+="8888(WS) "
-        echo "$ACTIVOS" | grep -q ":7300 " && PUERTOS+="7300(BadVPN) "
+        echo "$ACTIVOS" | grep -q ":7300 " && PUERTOS+="7300(VPN) "
         echo "$ACTIVOS" | grep -q ":51820 " && PUERTOS+="51820(WG)"
-        [ -z "$PUERTOS" ] && PUERTOS="Ninguno detectado"
+        [ -z "$PUERTOS" ] && PUERTOS="Ninguno"
 
         header
         echo -e "   ${CYAN}🌐 IP Server :${NC} ${WHITE}${BOLD}${VPS_IP}${NC}"
