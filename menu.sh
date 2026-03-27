@@ -309,9 +309,9 @@ function install_ws_python() {
     read -r dest_port
     [ -z "$dest_port" ] && dest_port=80
     
-    # Script Básico Pydic WS
+    # Script WS Proxy Mejorado (Estilo ChumoGH)
     cat > /etc/gaming_vps/ws.py << EOF
-import socket, threading
+import socket, threading, sys
 
 def forward(src, dst):
     while True:
@@ -323,28 +323,38 @@ def forward(src, dst):
 
 def handle_client(client_socket):
     try:
-        # Prevenimos DoS leyendo rápido y con timeout
         client_socket.settimeout(3.0)
         request = client_socket.recv(4096)
         client_socket.settimeout(None)
         if not request: return
-        client_socket.send(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
         
         remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         remote_socket.connect(('127.0.0.1', $dest_port))
         
+        # Mapeo inteligente de Handshake (Estilo ChumoGH)
+        req_str = request.decode('utf-8', 'ignore')
+        if "HTTP" in req_str or "GET" in req_str or "CONNECT" in req_str:
+            client_socket.send(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
+        else:
+            # Si es tráfico puro (ej SSH bruto), enviamos la petición original intacta
+            remote_socket.send(request)
+            
         threading.Thread(target=forward, args=(client_socket, remote_socket)).start()
         threading.Thread(target=forward, args=(remote_socket, client_socket)).start()
     except:
         client_socket.close()
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server.bind(('0.0.0.0', $ws_port))
-server.listen(100)
-while True:
-    client_sock, addr = server.accept()
-    threading.Thread(target=handle_client, args=(client_sock,)).start()
+try:
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(('0.0.0.0', $ws_port))
+    server.listen(100)
+    print("WS Iniciado en", $ws_port)
+    while True:
+        client_sock, addr = server.accept()
+        threading.Thread(target=handle_client, args=(client_sock,)).start()
+except Exception as e:
+    print("Error:", e)
 EOF
     
     cat > /etc/systemd/system/ws-python.service <<EOF
@@ -395,6 +405,62 @@ function install_wireguard() {
 }
 
 
+function manage_services() {
+    while true; do
+        header
+        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}G E S T I O N   D E   S E R V I C I O S${NC} ${MAGENTA}❖${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🔄 Reiniciar Todos los Protocolos${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🛑 Detener Todos los Protocolos${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}📊 Estado de Protocolos (Systemctl)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Anterior${NC}\n"
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    
+        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción:${NC} "
+        read opt
+
+        case $opt in
+            1)
+                echo -e "\n${YELLOW}⏳ Reiniciando servicios...${NC}"
+                systemctl restart dropbear 2>/dev/null
+                systemctl restart stunnel4 2>/dev/null
+                systemctl restart squid 2>/dev/null
+                systemctl restart ws-python 2>/dev/null
+                systemctl restart badvpn 2>/dev/null
+                systemctl restart sshd 2>/dev/null
+                echo -e "${GREEN}[✔] Protocolos reiniciados con éxito.${NC}"
+                sleep 2
+                ;;
+            2)
+                echo -e "\n${YELLOW}⏳ Deteniendo servicios...${NC}"
+                systemctl stop dropbear 2>/dev/null
+                systemctl stop stunnel4 2>/dev/null
+                systemctl stop squid 2>/dev/null
+                systemctl stop ws-python 2>/dev/null
+                systemctl stop badvpn 2>/dev/null
+                echo -e "${GREEN}[✔] Protocolos detenidos.${NC}"
+                sleep 2
+                ;;
+            3)
+                echo -e "\n${CYAN}📊 Estado Rápido de Servicios:${NC}"
+                for s in sshd dropbear stunnel4 squid ws-python badvpn; do
+                    if systemctl is-active --quiet $s; then
+                        echo -e "   ${GREEN}[✔] $s : ACTIVO${NC}"
+                    else
+                        echo -e "   ${RED}[x] $s : INACTIVO${NC}"
+                    fi
+                done
+                echo -e "\n${WHITE}Presiona ENTER para continuar...${NC}"
+                read enter
+                ;;
+            0) return ;;
+            *) 
+                echo -e "${RED}❌ Opción no válida.${NC}"
+                sleep 1
+                ;;
+        esac
+    done
+}
+
 function services_menu() {
     while true; do
         header
@@ -405,6 +471,7 @@ function services_menu() {
         echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}☁️  WebSocket Python (Para Cloudflare)${NC}"
         echo -e "      ${CYAN}[${YELLOW}  5 ${CYAN}]${NC} ${BOLD}🛡️  OpenVPN Instalador Automático${NC}"
         echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}⚡ WireGuard Auto-Instalador (Low Ping UDP)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🔄 Administrador de Servicios (Reiniciar/Estado)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
@@ -418,6 +485,7 @@ function services_menu() {
             4) install_ws_python ;;
             5) install_openvpn ;;
             6) install_wireguard ;;
+            7) manage_services ;;
             0) return ;;
             *) 
                 echo -e "${RED}❌ Opción no válida.${NC}"
