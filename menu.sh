@@ -351,11 +351,49 @@ function install_wireguard() {
 function install_xray() {
     header
     echo -e "\n${CYAN}[*] Instalador Oficial Xray Core (Vmess/Vless/Trojan)...${NC}"
-    echo -e "${YELLOW}>> Se descargará el script oficial de XTLS-Xray.${NC}"
+    echo -e "${YELLOW}>> Se descargará el script oficial de XTLS-Xray y se configurará VLESS.${NC}"
     sleep 3
-    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-    echo -e "${GREEN}[✔] Xray instalado en tu VPS.${NC}"
-    echo -e "Nota: Para clientes complejos deberás crear el config.json manualmente en /usr/local/etc/xray/"
+    apt-get update -y > /dev/null 2>&1
+    apt-get install -y jq uuid-runtime curl > /dev/null 2>&1
+    
+    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install > /dev/null 2>&1
+    
+    # Crear la configuración base automática para VLESS WS en puerto 8081
+    mkdir -p /usr/local/etc/xray
+    cat > /usr/local/etc/xray/config.json <<EOF
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "inbounds": [
+    {
+      "port": 8081,
+      "listen": "0.0.0.0",
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/xray"
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom"
+    }
+  ]
+}
+EOF
+    systemctl enable xray > /dev/null 2>&1
+    systemctl restart xray > /dev/null 2>&1
+    
+    echo -e "${GREEN}[✔] Xray Core y Perfil Base VLESS instalados en el puerto 8081.${NC}"
+    echo -e "Ya puedes generar links VLESS desde el apartado de Gestión de Usuarios."
     sleep 4
     return
 }
@@ -613,6 +651,55 @@ function view_wg_user() {
     return
 }
 
+function create_xray_user() {
+    header
+    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}C R E A R   P E R F I L   V L E S S   ( S N I   B U G )${NC} ${MAGENTA}❖${NC}\n"
+    
+    if [ ! -f /usr/local/etc/xray/config.json ]; then
+        echo -e "${RED}[x] Error: Xray no está instalado. Instálalo desde el menú Protocolos (Opción 7).${NC}"
+        sleep 3
+        return
+    fi
+    
+    echo -e -n "   ${CYAN}👤 Nombre del usuario:${NC} "
+    read xray_user
+    
+    # Validaciones básicas
+    if [[ -z "$xray_user" ]]; then return; fi
+    
+    echo -e -n "   ${CYAN}🌐 Escribe el SNI Bug (Ej. www.whatsapp.net):${NC} "
+    read sni_bug
+    if [[ -z "$sni_bug" ]]; then sni_bug="bug.com"; fi
+    
+    # Inyectar el usuario en la BD de Xray con JQ
+    UUID=$(uuidgen)
+    VPS_IP=$(curl -s ifconfig.me)
+    
+    jq '.inbounds[0].settings.clients += [{"id": "'"$UUID"'", "email": "'"$xray_user"'"}]' /usr/local/etc/xray/config.json > /tmp/xray.json
+    cp /tmp/xray.json /usr/local/etc/xray/config.json
+    rm -f /tmp/xray.json
+    
+    systemctl restart xray
+    
+    # Generar Link VLESS Formatado Universal
+    VLESS_LINK="vless://${UUID}@${VPS_IP}:8081?type=ws&path=%2Fxray&host=${sni_bug}&security=none#${xray_user}"
+    
+    echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${GREEN}[✔] Cliente VLESS SNI Creado Exitosamente:${NC}\n"
+    echo -e "   ${YELLOW}Úsalo en HTTP Custom, HTTP Injector, V2Ray o tu inyector favorito:${NC}\n"
+    echo -e "   ${WHITE}${VLESS_LINK}${NC}"
+    echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    
+    if command -v qrencode &> /dev/null; then
+        echo -e "\n   ${CYAN}📱 Código QR del enlace (Escanea desde la App):${NC}"
+        echo "${VLESS_LINK}" | qrencode -t UTF8
+    fi
+    
+    echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
+    read enter
+    return
+}
+
 function users_menu() {
     while true; do
         header
@@ -622,6 +709,7 @@ function users_menu() {
         echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}👥 Ver Detalles y Límite de Clientes SSH${NC}"
         echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}🦇 Crear Cliente WireGuard (Generar Config)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}📱 Mostrar Config/QR de un Cliente WireGuard${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}💎 Crear Cliente Xray VLESS (SNI Bug para Inyectores)${NC}"
         echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
@@ -634,6 +722,7 @@ function users_menu() {
             3) list_ssh_users ;;
             4) create_wg_user ;;
             5) view_wg_user ;;
+            6) create_xray_user ;;
             0) return ;;
             *) 
                 echo -e "${RED}❌ Opción no válida.${NC}"
