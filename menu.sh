@@ -48,21 +48,24 @@ function install_bbr() {
     sysctl -p > /dev/null 2>&1
     echo -e "${GREEN}[✔] TCP BBR (Acelerador de red) activado con éxito.${NC}"
     sleep 2
-    optimizer_menu
+    return
 }
 
 function install_badvpn() {
-    echo -e "\n${CYAN}[*] Descargando y Configurando BadVPN para Juegos (UDP)...${NC}"
-    # El usuario debe usar root en su Linux (el script asumirá root)
+    echo -e "\n${CYAN}[*] Instalando y Compilando BadVPN para Juegos (UDP)...${NC}"
     apt-get update -y > /dev/null 2>&1
-    apt-get install -y wget cmake screen systemd > /dev/null 2>&1
+    apt-get install -y cmake build-essential git gcc > /dev/null 2>&1
     
-    # Descargar binario precompilado de BadVPN (para evitar demoras compilando y consumo en el VPS)
-    wget -qO /bin/badvpn-udpgw "https://raw.githubusercontent.com/daybreakersx/prem/master/badvpn-udpgw64"
-    if [ -f /bin/badvpn-udpgw ]; then
-        chmod +x /bin/badvpn-udpgw
+    rm -rf /opt/badvpn
+    git clone https://github.com/ambrop72/badvpn.git /opt/badvpn > /dev/null 2>&1
+    mkdir -p /opt/badvpn/build
+    cd /opt/badvpn/build
+    cmake .. -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 > /dev/null 2>&1
+    make install > /dev/null 2>&1
+    
+    if command -v badvpn-udpgw &> /dev/null || [ -f /usr/local/bin/badvpn-udpgw ]; then
+        BIN_PATH=$(command -v badvpn-udpgw || echo "/usr/local/bin/badvpn-udpgw")
         
-        # Crear servicio systemd en puerto 7300
         cat > /etc/systemd/system/badvpn.service <<EOF
 [Unit]
 Description=BadVPN UDPGW Gaming Port 7300
@@ -70,21 +73,22 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 500 --max-connections-for-client 10
+ExecStart=$BIN_PATH --listen-addr 127.0.0.1:7300 --max-clients 500 --max-connections-for-client 10
 Restart=always
 RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
 EOF
+        systemctl daemon-reload > /dev/null 2>&1
         systemctl enable badvpn > /dev/null 2>&1
         systemctl restart badvpn > /dev/null 2>&1
         echo -e "${GREEN}[✔] BadVPN UDP activado correctamente en el puerto 7300.${NC}"
     else
-        echo -e "${RED}[x] Error al descargar BadVPN. Verifica el internet de la VPS.${NC}"
+        echo -e "${RED}[x] Error al compilar BadVPN. Verifica el entorno de dependencias.${NC}"
     fi
     sleep 3
-    optimizer_menu
+    return
 }
 
 function open_internal_ports() {
@@ -109,32 +113,34 @@ function open_internal_ports() {
     echo -e "${YELLOW}🚨 ATENCIÓN AWS: Aún DEBES ir al portal de Amazon EC2 -> 'Security Groups' y permitir tráfico a los puertos (80, 443, 7300, etc.) o AWS impedirá la conexión física.${NC}"
     echo -e "\nPresiona ENTER para continuar..."
     read enter
-    optimizer_menu
+    return
 }
 
 function optimizer_menu() {
-    header
-    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}O P T I M I Z A C I Ó N   G A M I N G${NC} ${MAGENTA}❖${NC}\n"
-    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🌐 Activar Acelerador TCP BBR de Google${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🎮 Instalar BadVPN (Comunicaciones UDP)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🔓 Purgar y Abrir Puertos Internos (UFW)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    while true; do
+        header
+        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}O P T I M I Z A C I Ó N   G A M I N G${NC} ${MAGENTA}❖${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🌐 Activar Acelerador TCP BBR de Google${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🎮 Instalar BadVPN (Comunicaciones UDP)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🔓 Purgar y Abrir Puertos Internos (UFW)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas hacer?:${NC} "
-    read opt
+        echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas hacer?:${NC} "
+        read opt
 
-    case $opt in
-        1) install_bbr ;;
-        2) install_badvpn ;;
-        3) open_internal_ports ;;
-        0) main_menu ;;
-        *) 
-            echo -e "${RED}❌ Opción no válida.${NC}"
-            sleep 1
-            optimizer_menu 
-            ;;
-    esac
+        case $opt in
+            1) install_bbr ;;
+            2) install_badvpn ;;
+            3) open_internal_ports ;;
+            0) return ;;
+            *) 
+                echo -e "${RED}❌ Opción no válida.${NC}"
+                sleep 1
+                continue 
+                ;;
+        esac
+    done
 }
 # =========================================================
 
@@ -170,7 +176,7 @@ EOF
     
     echo -e "${GREEN}[✔] Dropbear instalado exitosamente (Puertos: 80, 143, 109).${NC}"
     sleep 3
-    services_menu
+    return
 }
 
 function install_stunnel() {
@@ -205,7 +211,7 @@ EOF
     
     echo -e "${GREEN}[✔] Stunnel configurado. (Puerto SSL 443 -> Redirigido a Puerto 80).${NC}"
     sleep 3
-    services_menu
+    return
 }
 
 function install_squid() {
@@ -218,13 +224,16 @@ function install_squid() {
 http_port 8080
 http_port 3128
 acl localhost src 127.0.0.1/32
-acl to_localhost dst 127.0.0.0/8 0.0.0.0/32
-http_access allow all
+acl allow_ports port 22 80 143 109 443 7300 8888
+acl dest_local dst 127.0.0.0/8
+http_access allow localhost
+http_access allow dest_local allow_ports
+http_access deny all
 EOF
     service squid restart > /dev/null 2>&1
     echo -e "${GREEN}[✔] Proxy Squid activado en puertos 8080 y 3128 (Sin contraseña).${NC}"
     sleep 3
-    services_menu
+    return
 }
 
 function install_ws_python() {
@@ -236,29 +245,40 @@ function install_ws_python() {
     
     # Script Básico Pydic WS que inyecta en puerto 8888 y envía a Dropbear 80
     cat > /etc/gaming_vps/ws.py << 'EOF'
-import socket, threading, sys
+import socket, threading
+
+def forward(src, dst):
+    while True:
+        try:
+            data = src.recv(4096)
+            if not data: break
+            dst.send(data)
+        except: break
+
 def handle_client(client_socket):
-    remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try: remote_socket.connect(('127.0.0.1', 80))
-    except: return
-    def forward(src, dst):
-        while True:
-            try:
-                data = src.recv(4096)
-                if not data: break
-                dst.send(data)
-            except: break
-    threading.Thread(target=forward, args=(client_socket, remote_socket)).start()
-    threading.Thread(target=forward, args=(remote_socket, client_socket)).start()
+    try:
+        # Prevenimos DoS leyendo rápido y con timeout
+        client_socket.settimeout(3.0)
+        request = client_socket.recv(4096)
+        client_socket.settimeout(None)
+        if not request: return
+        client_socket.send(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
+        
+        remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        remote_socket.connect(('127.0.0.1', 80))
+        
+        threading.Thread(target=forward, args=(client_socket, remote_socket)).start()
+        threading.Thread(target=forward, args=(remote_socket, client_socket)).start()
+    except:
+        client_socket.close()
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind(('0.0.0.0', 8888))
-server.listen(5)
+server.listen(100)
 while True:
     client_sock, addr = server.accept()
-    client_sock.recv(4096)
-    client_sock.send(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
-    handle_client(client_sock)
+    threading.Thread(target=handle_client, args=(client_sock,)).start()
 EOF
     
     cat > /etc/systemd/system/ws-python.service <<EOF
@@ -279,7 +299,7 @@ EOF
     systemctl restart ws-python > /dev/null 2>&1
     echo -e "${GREEN}[✔] WebSocket Python activado (Puerto 8888 -> SSH 80).${NC}"
     sleep 3
-    services_menu
+    return
 }
 
 function install_openvpn() {
@@ -292,7 +312,7 @@ function install_openvpn() {
     bash /etc/gaming_vps/openvpn.sh
     echo -e "${GREEN}[✔] Proceso de OpenVPN finalizado.${NC}"
     sleep 3
-    services_menu
+    return
 }
 
 function install_wireguard() {
@@ -305,7 +325,7 @@ function install_wireguard() {
     bash /etc/gaming_vps/wireguard.sh
     echo -e "${GREEN}[✔] Proceso de WireGuard finalizado.${NC}"
     sleep 3
-    services_menu
+    return
 }
 
 function install_xray() {
@@ -317,40 +337,42 @@ function install_xray() {
     echo -e "${GREEN}[✔] Xray instalado en tu VPS.${NC}"
     echo -e "Nota: Para clientes complejos deberás crear el config.json manualmente en /usr/local/etc/xray/"
     sleep 4
-    services_menu
+    return
 }
 
 function services_menu() {
-    header
-    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}P R O T O C O L O S   Y   T Ú N E L E S${NC} ${MAGENTA}❖${NC}\n"
-    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛠️  Dropbear SSH (Carga CPU baja | Puertos 80, 143)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🔒 Stunnel4 (Ocultar por SSL y SNI | Puerto 443)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🌐 Proxy Squid3 (Básico para inyecciones | 8080/3128)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}☁️  WebSocket Python (Para Cloudflare | Puerto 8888)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  OpenVPN Instalador Automático${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}⚡ WireGuard Auto-Instalador (Low Ping UDP)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🦇 Xray Core Oficial (Vmess/Vless/Trojan)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    while true; do
+        header
+        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}P R O T O C O L O S   Y   T Ú N E L E S${NC} ${MAGENTA}❖${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛠️  Dropbear SSH (Carga CPU baja | Puertos 80, 143)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🔒 Stunnel4 (Ocultar por SSL y SNI | Puerto 443)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🌐 Proxy Squid3 (Básico para inyecciones | 8080/3128)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}☁️  WebSocket Python (Para Cloudflare | Puerto 8888)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  OpenVPN Instalador Automático${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}⚡ WireGuard Auto-Instalador (Low Ping UDP)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🦇 Xray Core Oficial (Vmess/Vless/Trojan)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas instalar?:${NC} "
-    read opt
+        echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas instalar?:${NC} "
+        read opt
 
-    case $opt in
-        1) install_dropbear ;;
-        2) install_stunnel ;;
-        3) install_squid ;;
-        4) install_ws_python ;;
-        5) install_openvpn ;;
-        6) install_wireguard ;;
-        7) install_xray ;;
-        0) main_menu ;;
-        *) 
-            echo -e "${RED}❌ Opción no válida.${NC}"
-            sleep 1
-            services_menu 
-            ;;
-    esac
+        case $opt in
+            1) install_dropbear ;;
+            2) install_stunnel ;;
+            3) install_squid ;;
+            4) install_ws_python ;;
+            5) install_openvpn ;;
+            6) install_wireguard ;;
+            7) install_xray ;;
+            0) return ;;
+            *) 
+                echo -e "${RED}❌ Opción no válida.${NC}"
+                sleep 1
+                continue 
+                ;;
+        esac
+    done
 }
 # =========================================================
 
@@ -399,7 +421,7 @@ function create_user() {
     
     echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
     read enter
-    users_menu
+    return
 }
 
 function delete_user() {
@@ -417,30 +439,32 @@ function delete_user() {
         echo -e "${RED}[x] Error: El usuario '$username' no existe o ya fue eliminado.${NC}"
     fi
     sleep 3
-    users_menu
+    return
 }
 
 function users_menu() {
-    header
-    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}G E S T I Ó N   D E   C L I E N T E S${NC} ${MAGENTA}❖${NC}\n"
-    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}➕ Crear Cliente con Autorización Temporal${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}➖ Eliminar y Desconectar Cliente${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    while true; do
+        header
+        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}G E S T I Ó N   D E   C L I E N T E S${NC} ${MAGENTA}❖${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}➕ Crear Cliente con Autorización Temporal${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}➖ Eliminar y Desconectar Cliente${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas hacer?:${NC} "
-    read opt
+        echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas hacer?:${NC} "
+        read opt
 
-    case $opt in
-        1) create_user ;;
-        2) delete_user ;;
-        0) main_menu ;;
-        *) 
-            echo -e "${RED}❌ Opción no válida.${NC}"
-            sleep 1
-            users_menu 
-            ;;
-    esac
+        case $opt in
+            1) create_user ;;
+            2) delete_user ;;
+            0) return ;;
+            *) 
+                echo -e "${RED}❌ Opción no válida.${NC}"
+                sleep 1
+                continue 
+                ;;
+        esac
+    done
 }
 # =========================================================
 
@@ -449,8 +473,9 @@ function show_system_stats() {
     header
     echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}E S T A D O   D E L   S E R V I D O R${NC} ${MAGENTA}❖${NC}\n"
     
-    # Obtener Uso de CPU (cálculo simplificado de top)
-    cpu_load=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
+    # Obtener Uso de CPU (usando vmstat, sin afectar locale)
+    cpu_idle=$(vmstat 1 2 | tail -1 | awk '{print $15}')
+    cpu_load=$((100 - cpu_idle))
     
     # Obtener Uso de RAM
     ram_total=$(free -m | awk '/Mem:/ {print $2}')
@@ -467,7 +492,7 @@ function show_system_stats() {
     echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "   ${WHITE}Presiona ENTER para regresar...${NC}"
     read enter
-    monitor_menu
+    return
 }
 
 function clear_ram() {
@@ -482,30 +507,32 @@ function clear_ram() {
     echo -e "   ${GREEN}[✔] Rutas de red purgadas. Esto reducirá micro-cortes.${NC}"
     echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     sleep 3
-    monitor_menu
+    return
 }
 
 function monitor_menu() {
-    header
-    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M O N I T O R I Z A C I Ó N${NC} ${MAGENTA}❖${NC}\n"
-    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}📈 Ver Estado en Vivo (CPU, RAM, Latencia)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🧹 Forzar Limpieza de Memoria RAM${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    while true; do
+        header
+        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M O N I T O R I Z A C I Ó N${NC} ${MAGENTA}❖${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}📈 Ver Estado en Vivo (CPU, RAM, Latencia)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🧹 Forzar Limpieza de Memoria RAM${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción:${NC} "
-    read opt
+        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción:${NC} "
+        read opt
 
-    case $opt in
-        1) show_system_stats ;;
-        2) clear_ram ;;
-        0) main_menu ;;
-        *) 
-            echo -e "${RED}❌ Opción no válida.${NC}"
-            sleep 1
-            monitor_menu 
-            ;;
-    esac
+        case $opt in
+            1) show_system_stats ;;
+            2) clear_ram ;;
+            0) return ;;
+            *) 
+                echo -e "${RED}❌ Opción no válida.${NC}"
+                sleep 1
+                continue 
+                ;;
+        esac
+    done
 }
 # =========================================================
 
@@ -515,6 +542,18 @@ function block_torrent() {
     echo -e "\n${CYAN}[*] Configurando Firewall Anti-Torrent / P2P...${NC}"
     apt-get update -y > /dev/null 2>&1
     apt-get install -y iptables > /dev/null 2>&1
+    
+    # Purgar previas para evitar duplicados masivos
+    iptables -D FORWARD -m string --algo bm --string "BitTorrent" -j DROP 2>/dev/null
+    iptables -D FORWARD -m string --algo bm --string "BitTorrent protocol" -j DROP 2>/dev/null
+    iptables -D FORWARD -m string --algo bm --string "peer_id=" -j DROP 2>/dev/null
+    iptables -D FORWARD -m string --algo bm --string ".torrent" -j DROP 2>/dev/null
+    iptables -D FORWARD -m string --algo bm --string "announce.php?passkey=" -j DROP 2>/dev/null
+    iptables -D FORWARD -m string --algo bm --string "torrent" -j DROP 2>/dev/null
+    iptables -D FORWARD -m string --algo bm --string "announce" -j DROP 2>/dev/null
+    iptables -D FORWARD -m string --algo bm --string "info_hash" -j DROP 2>/dev/null
+    iptables -D INPUT -p tcp --dport 6881:6889 -j DROP 2>/dev/null
+    iptables -D INPUT -p udp --dport 6881:6889 -j DROP 2>/dev/null
     
     # Reglas básicas para bloquear P2P y Torrents (Strings y Puertos)
     iptables -A FORWARD -m string --algo bm --string "BitTorrent" -j DROP
@@ -530,7 +569,7 @@ function block_torrent() {
     
     echo -e "${GREEN}[✔] ¡Firewall Anti-Torrent activado! Tu ping está asegurado.${NC}"
     sleep 3
-    security_menu
+    return
 }
 
 function setup_auto_clean() {
@@ -547,7 +586,7 @@ function setup_auto_clean() {
     echo -e "${GREEN}[✔] Tarea Automática (Cron) instalada.${NC}"
     echo -e "${GREEN}[✔] La VPS vaciará la basura de red sola cada 6 horas.${NC}"
     sleep 3
-    security_menu
+    return
 }
 
 function setup_autokill() {
@@ -563,14 +602,17 @@ function setup_autokill() {
 # Script de Chequeo de Conexiones Múltiples Abusivas
 for user in $(ls /etc/gaming_vps/*.limit 2>/dev/null | sed 's/.*\///;s/\.limit//'); do
     limite=$(cat /etc/gaming_vps/$user.limit)
-    conex_drop=$(ps aux | grep dropbear | grep -w "$user" | grep -v grep | wc -l)
-    conex_ssh=$(netstat -anp | grep ESTABLISHED | grep sshd | grep -w "$user" | wc -l)
+    
+    # Usando pgrep -u aseguramos compatibilidad con nombres >8 caracteres
+    conex_drop=$(pgrep -u "$user" dropbear | wc -l)
+    conex_ssh=$(pgrep -u "$user" sshd | wc -l)
     total=$(($conex_drop + $conex_ssh))
     
     if [ "$total" -gt "$limite" ]; then
         # Matar PIDs (procesos) del usuario si supera el límite establecido
-        pkill -u $user dropbear
-        pkill -u $user sshd
+        pkill -u "$user" dropbear
+        pkill -u "$user" sshd
+        pkill -u "$user"
     fi
 done
 EOF
@@ -584,77 +626,81 @@ EOF
     echo -e "${GREEN}[✔] Perro Guardián Auto-Kill activado.${NC}"
     echo -e "${GREEN}[✔] Revisará los límites de usuarios cada minuto en segundo plano.${NC}"
     sleep 3
-    security_menu
+    return
 }
 
 function security_menu() {
-    header
-    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}S E G U R I D A D   Y   A N T I - A B U S O${NC} ${MAGENTA}❖${NC}\n"
-    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛑 Bloquear Tráfico Torrent (Protección Web)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}⏱️  Activar Tarea de Limpieza Automática (6 hrs)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}✂️  Activar Watchdog Auto-Kill (Anti Multi-Login)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    while true; do
+        header
+        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}S E G U R I D A D   Y   A N T I - A B U S O${NC} ${MAGENTA}❖${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛑 Bloquear Tráfico Torrent (Protección Web)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}⏱️  Activar Tarea de Limpieza Automática (6 hrs)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}✂️  Activar Watchdog Auto-Kill (Anti Multi-Login)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción de seguridad:${NC} "
-    read opt
+        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción de seguridad:${NC} "
+        read opt
 
-    case $opt in
-        1) block_torrent ;;
-        2) setup_auto_clean ;;
-        3) setup_autokill ;;
-        0) main_menu ;;
-        *) 
-            echo -e "${RED}❌ Opción no válida.${NC}"
-            sleep 1
-            security_menu 
-            ;;
-    esac
+        case $opt in
+            1) block_torrent ;;
+            2) setup_auto_clean ;;
+            3) setup_autokill ;;
+            0) return ;;
+            *) 
+                echo -e "${RED}❌ Opción no válida.${NC}"
+                sleep 1
+                continue 
+                ;;
+        esac
+    done
 }
 # =========================================================
 
 # Función para mostrar el panel principal
 function main_menu() {
-    header
-    echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M E N Ú   P R I N C I P A L${NC} ${MAGENTA}❖${NC}\n"
-    echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}👤 Gestor de Usuarios VIP${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🚀 Acelerador y Optimización de Red${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}⚙️  Instalador de Protocolos y Túneles${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}📊 Monitor de Recursos (RAM/CPU/Ping)${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  Módulo de Seguridad y Anti-Abusos${NC}"
-    echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}❌ Cerrar Sesión${NC}\n"
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    while true; do
+        header
+        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M E N Ú   P R I N C I P A L${NC} ${MAGENTA}❖${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}👤 Gestor de Usuarios VIP${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🚀 Acelerador y Optimización de Red${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}⚙️  Instalador de Protocolos y Túneles${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}📊 Monitor de Recursos (RAM/CPU/Ping)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  Módulo de Seguridad y Anti-Abusos${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}❌ Cerrar Sesión${NC}\n"
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción del panel:${NC} "
-    read option
+        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción del panel:${NC} "
+        read option
 
-    case $option in
-        1)
-            users_menu
-            ;;
-        2)
-            optimizer_menu
-            ;;
-        3)
-            services_menu
-            ;;
-        4)
-            monitor_menu
-            ;;
-        5)
-            security_menu
-            ;;
-        0)
-            clear
-            echo -e "${MAGENTA}>>> Saliendo... ¡GG!${NC}"
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}❌ Opción no válida. Intenta de nuevo.${NC}"
-            sleep 2
-            main_menu
-            ;;
-    esac
+        case $option in
+            1)
+                users_menu
+                ;;
+            2)
+                optimizer_menu
+                ;;
+            3)
+                services_menu
+                ;;
+            4)
+                monitor_menu
+                ;;
+            5)
+                security_menu
+                ;;
+            0)
+                clear
+                echo -e "${MAGENTA}>>> Saliendo... ¡GG!${NC}"
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}❌ Opción no válida. Intenta de nuevo.${NC}"
+                sleep 2
+                continue
+                ;;
+        esac
+    done
 }
 
 # Iniciar el script
