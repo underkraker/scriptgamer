@@ -310,23 +310,61 @@ function install_squid() {
 
 function install_ws_python() {
     header
-    echo -e "\n${CYAN}[*] Instalando Websocket Proxy v8.0 'Protocol Core'...${NC}"
+    echo -e "\n${CYAN}[*] Instalando Websocket Proxy v9.0 'Elite Handshake'...${NC}"
     apt-get update -y > /dev/null 2>&1
-    apt-get install -y python3 lsof > /dev/null 2>&1
+    apt-get install -y python3 lsof openssl stunnel4 certbot > /dev/null 2>&1
     mkdir -p /etc/gaming_vps
     
     echo -e -n "   ${CYAN}🔌 ¿Puerto para WebSocket? (Ej: 8080):${NC} "
     read -r ws_port
     [ -z "$ws_port" ] && ws_port=8080
     
-    echo -e -n "   ${CYAN}🎯 ¿Puerto Interno Destino (Target)? (Ej: 22):${NC} "
+    echo -e -n "   ${CYAN}🎯 ¿Puerto Interno Destino (Target SSH)? (Ej: 22):${NC} "
     read -r dest_port
     [ -z "$dest_port" ] && dest_port=22
     
     # Liberar el puerto si otro servicio lo está usando
     liberar_puerto $ws_port
     
-    # Script WS Proxy Pro v8.0 (Full Handshake Core)
+    # 🕵️ DECISIÓN SSL: ¿Certbot o Auto-firmado?
+    echo -e "\n${MAGENTA}------------------------------------------------------${NC}"
+    echo -e "${WHITE}${BOLD}      SISTEMA DE SEGURIDAD SSL INTELIGENTE${NC}"
+    echo -e "${MAGENTA}------------------------------------------------------${NC}"
+    echo -e "${CYAN}¿Deseas usar un DOMINIO para SSL (Certbot)? (s/n)${NC}"
+    echo -e -n "${YELLOW}>> Respuesta: ${NC}"
+    read -r use_certbot
+    
+    CERT_FILE="/etc/stunnel/stunnel.pem"
+    
+    if [[ "$use_certbot" =~ ^[Ss]$ ]]; then
+        echo -e "\n${CYAN}Escribe tu dominio completo (Ej: vps.dominio.com):${NC}"
+        echo -e -n "${YELLOW}>> Dominio: ${NC}"
+        read -r my_domain
+        
+        if [ -n "$my_domain" ]; then
+            echo -e "\n${CYAN}[*] Solicitando certificado a Let's Encrypt...${NC}"
+            # Liberar puerto 80 para Certbot
+            liberar_puerto 80 > /dev/null 2>&1
+            certbot certonly --standalone -d $my_domain --non-interactive --agree-tos --register-unsafely-without-email > /dev/null 2>&1
+            
+            if [ -d "/etc/letsencrypt/live/$my_domain" ]; then
+                echo -e "${GREEN}[✔] Certificado emitido correctamente.${NC}"
+                cat /etc/letsencrypt/live/$my_domain/fullchain.pem /etc/letsencrypt/live/$my_domain/privkey.pem > $CERT_FILE
+            else
+                echo -e "${RED}[x] Error al emitir Certbot. Usando Auto-firmado de respaldo...${NC}"
+                openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
+                  -subj "/C=US/ST=ST/L=L/O=O/CN=127.0.0.1" \
+                  -keyout $CERT_FILE -out $CERT_FILE > /dev/null 2>&1
+            fi
+        fi
+    else
+        echo -e "\n${CYAN}[*] Generando certificado Auto-firmado para IP...${NC}"
+        openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
+          -subj "/C=US/ST=ST/L=L/O=O/CN=127.0.0.1" \
+          -keyout $CERT_FILE -out $CERT_FILE > /dev/null 2>&1
+    fi
+    
+    # Script WS Proxy Pro v9.0 (Elite Handshake Core)
     cat > /etc/gaming_vps/ws.py << EOF
 import socket, threading, hashlib, base64, re
 
@@ -347,7 +385,7 @@ def forward(src, dst):
 
 def handle_client(client_socket):
     try:
-        client_socket.settimeout(10.0)
+        client_socket.settimeout(15.0)
         request = b''
         try:
             request = client_socket.recv(131072)
@@ -359,8 +397,8 @@ def handle_client(client_socket):
 
         header_str = request.decode('utf-8', errors='ignore')
         
-        # --- PROCESO COMPLETO HANDSHAKE RFC 6455 ---
-        if "Upgrade: websocket" in header_str or "GET" in header_str:
+        # --- HANDSHAKE ÉLITE COMPLETO (RFC 6455) ---
+        if "Upgrade: websocket" in header_str or "GET" in header_str or "CONNECT" in header_str or "POST" in header_str:
             key_match = re.search(r'Sec-WebSocket-Key: (.+)\r\n', header_str)
             if key_match:
                 key = key_match.group(1).strip()
@@ -370,17 +408,16 @@ def handle_client(client_socket):
                     "Upgrade: websocket\r\n"
                     "Connection: Upgrade\r\n"
                     "Sec-WebSocket-Accept: " + accept + "\r\n"
-                    "Server: GamerMaster-v8.0\r\n\r\n"
+                    "Server: GamerMaster-v9.0\r\n\r\n"
                 )
                 client_socket.sendall(response.encode())
             else:
-                # Fallback para Payloads universales que no envían Key
+                # Fallback para Inyectores Legacy (HTTP Custom)
                 client_socket.sendall(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
 
         remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         remote_socket.connect(('127.0.0.1', $dest_port))
         
-        # Enviar buffer extra si el handshake contenía datos pegados
         idx = request.find(b'\r\n\r\n')
         if idx != -1:
             extra = request[idx+4:]
@@ -398,16 +435,32 @@ try:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(('0.0.0.0', $ws_port))
-    server.listen(5000)
+    server.listen(10000)
     while True:
         client_sock, addr = server.accept()
         threading.Thread(target=handle_client, args=(client_sock,), daemon=True).start()
 except: pass
 EOF
     
+    cat > /etc/stunnel/stunnel.conf <<EOF
+pid = /var/run/stunnel4.pid
+cert = $CERT_FILE
+key = $CERT_FILE
+foreground = no
+socket = l:TCP_NODELAY=1
+socket = r:TCP_NODELAY=1
+
+[ws-ssl]
+accept = 443
+connect = 127.0.0.1:$ws_port
+EOF
+    
+    sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4 > /dev/null 2>&1
+    systemctl restart stunnel4 > /dev/null 2>&1
+
     cat > /etc/systemd/system/ws-python.service <<EOF
 [Unit]
-Description=Python WebSocket Proxy v8.0 'Full Protocol'
+Description=Python WebSocket Proxy v9.0 'Elite Protocol'
 After=network.target
 
 [Service]
@@ -422,8 +475,14 @@ EOF
     systemctl daemon-reload > /dev/null 2>&1
     systemctl enable ws-python > /dev/null 2>&1
     systemctl restart ws-python > /dev/null 2>&1
-    echo -e "${GREEN}[✔] WebSocket Proxy v8.0 'Full Protocol' activado en puerto $ws_port.${NC}"
-    sleep 3
+    
+    echo -e "${GREEN}[✔] WebSocket Proxy v9.0 ÉLITE ACTIVO (Puerto $ws_port).${NC}"
+    echo -e "${GREEN}[✔] Tunnel SSL Stunnel ACTIVO (Puerto 443 -> $ws_port).${NC}"
+    echo -e "\n${YELLOW}=== INFO PARA EL CLIENTE ===${NC}"
+    echo -e "${CYAN}PAYLOAD:${NC} GET / HTTP/1.1[crlf]Host: [host][crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]"
+    echo -e "${CYAN}CONEXIÓN:${NC} SSL/TLS en Puerto 443"
+    [ -n "$my_domain" ] && echo -e "${CYAN}DOMAIN:${NC} $my_domain"
+    sleep 5
     return
 }
 
