@@ -19,6 +19,13 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+# Limpiar procesos duplicados anteriores para evitar mensajes dobles
+echo -e "\n${CYAN}[*] Limpiando procesos duplicados antes de actualizar...${NC}"
+systemctl stop vps-bot > /dev/null 2>&1
+pkill -9 -f bot.py > /dev/null 2>&1
+pkill -9 -f venv/bin/python3 > /dev/null 2>&1
+fuser -k 5000/tcp > /dev/null 2>&1
+
 # Instalar Dependencias
 echo -e "\n${CYAN}[*] Instalando Python3, SQLite y Pip...${NC}"
 apt-get update -y > /dev/null 2>&1
