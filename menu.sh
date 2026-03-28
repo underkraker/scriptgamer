@@ -310,7 +310,7 @@ function install_squid() {
 
 function install_ws_python() {
     header
-    echo -e "\n${CYAN}[*] Instalando Websocket Python (Cloudflare Payload)...${NC}"
+    echo -e "\n${CYAN}[*] Instalando Websocket Proxy v8.0 'Protocol Core'...${NC}"
     apt-get update -y > /dev/null 2>&1
     apt-get install -y python3 lsof > /dev/null 2>&1
     mkdir -p /etc/gaming_vps
@@ -323,16 +323,14 @@ function install_ws_python() {
     read -r dest_port
     [ -z "$dest_port" ] && dest_port=22
     
-    echo -e -n "   ${CYAN}📝 ¿Código de Respuesta HTTP? (Ej: 101 Switching Protocols):${NC} "
-    read -r ws_res
-    [ -z "$ws_res" ] && ws_res="101 Switching Protocols"
-    
-    # Liberar el puerto si otro servicio (ej SSL) ya lo está usando
+    # Liberar el puerto si otro servicio lo está usando
     liberar_puerto $ws_port
     
-    # Script WS Proxy Pro v7.0 (Legacy Pure Edition)
+    # Script WS Proxy Pro v8.0 (Full Handshake Core)
     cat > /etc/gaming_vps/ws.py << EOF
-import socket, threading, time
+import socket, threading, hashlib, base64, re
+
+GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 def forward(src, dst):
     try:
@@ -350,24 +348,39 @@ def forward(src, dst):
 def handle_client(client_socket):
     try:
         client_socket.settimeout(10.0)
+        request = b''
         try:
             request = client_socket.recv(131072)
-        except:
-            request = b''
+        except: pass
         
         if not request:
             client_socket.close()
             return
 
-        # Respuesta Atomica (Metodo ChumoGH / Legacy)
-        # Solo responde 101/200 OK con doble CRLF para maxima compatibilidad
-        if b"HTTP" in request or b"GET" in request or b"CONNECT" in request:
-            client_socket.sendall(b"HTTP/1.1 $ws_res\r\n\r\n")
+        header_str = request.decode('utf-8', errors='ignore')
+        
+        # --- PROCESO COMPLETO HANDSHAKE RFC 6455 ---
+        if "Upgrade: websocket" in header_str or "GET" in header_str:
+            key_match = re.search(r'Sec-WebSocket-Key: (.+)\r\n', header_str)
+            if key_match:
+                key = key_match.group(1).strip()
+                accept = base64.b64encode(hashlib.sha1((key + GUID).encode()).digest()).decode()
+                response = (
+                    "HTTP/1.1 101 Switching Protocols\r\n"
+                    "Upgrade: websocket\r\n"
+                    "Connection: Upgrade\r\n"
+                    "Sec-WebSocket-Accept: " + accept + "\r\n"
+                    "Server: GamerMaster-v8.0\r\n\r\n"
+                )
+                client_socket.sendall(response.encode())
+            else:
+                # Fallback para Payloads universales que no envían Key
+                client_socket.sendall(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
 
         remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         remote_socket.connect(('127.0.0.1', $dest_port))
         
-        # Hyper-Flow: Reenviar buffer inicial al servidor SSH (Si tiene datos extra)
+        # Enviar buffer extra si el handshake contenía datos pegados
         idx = request.find(b'\r\n\r\n')
         if idx != -1:
             extra = request[idx+4:]
@@ -377,7 +390,7 @@ def handle_client(client_socket):
 
         threading.Thread(target=forward, args=(client_socket, remote_socket), daemon=True).start()
         threading.Thread(target=forward, args=(remote_socket, client_socket), daemon=True).start()
-    except:
+    except Exception as e:
         try: client_socket.close()
         except: pass
 
@@ -385,7 +398,7 @@ try:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(('0.0.0.0', $ws_port))
-    server.listen(2500)
+    server.listen(5000)
     while True:
         client_sock, addr = server.accept()
         threading.Thread(target=handle_client, args=(client_sock,), daemon=True).start()
@@ -394,13 +407,14 @@ EOF
     
     cat > /etc/systemd/system/ws-python.service <<EOF
 [Unit]
-Description=Python WebSocket Proxy (Puerto 8888)
+Description=Python WebSocket Proxy v8.0 'Full Protocol'
 After=network.target
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/python3 /etc/gaming_vps/ws.py
 Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
@@ -408,7 +422,7 @@ EOF
     systemctl daemon-reload > /dev/null 2>&1
     systemctl enable ws-python > /dev/null 2>&1
     systemctl restart ws-python > /dev/null 2>&1
-    echo -e "${GREEN}[✔] WebSocket Python activado (Puerto $ws_port).${NC}"
+    echo -e "${GREEN}[✔] WebSocket Proxy v8.0 'Full Protocol' activado en puerto $ws_port.${NC}"
     sleep 3
     return
 }
