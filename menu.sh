@@ -257,7 +257,7 @@ function install_stunnel() {
     # Liberar el puerto si otro servicio (ej WebSocket) ya lo está usando
     liberar_puerto $listen_port
     
-    # Configurar stunnel.conf
+    # Configurar stunnel.conf (Modo Maestro Gaming)
     cat > /etc/stunnel/stunnel.conf <<EOF
 cert = /etc/stunnel/stunnel.pem
 client = no
@@ -327,13 +327,9 @@ function install_ws_python() {
     # Liberar el puerto si otro servicio (ej SSL) ya lo está usando
     liberar_puerto $ws_port
     
-    # Script WS Proxy Pro v5.0 (Professional Interactive Edition)
+    # Script WS Proxy Pro v6.0 (GOLD Master Edition)
     cat > /etc/gaming_vps/ws.py << EOF
-import socket, threading, time, hashlib, base64
-
-def get_accept(key):
-    guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-    return base64.b64encode(hashlib.sha1((key + guid).encode()).digest()).decode()
+import socket, threading, time
 
 def forward(src, dst):
     try:
@@ -350,7 +346,7 @@ def forward(src, dst):
 
 def handle_client(client_socket):
     try:
-        time.sleep(0.1)
+        # Buffer de 128KB para evitar fragmentacion en SSL
         client_socket.settimeout(5.0)
         try:
             request = client_socket.recv(131072)
@@ -361,48 +357,19 @@ def handle_client(client_socket):
             client_socket.close()
             return
 
-        # --- LOGICA HYPER-FLOW (SPLIT DATA) ---
-        idx = request.find(b'\r\n\r\n')
-        if idx != -1:
-            header_data = request[:idx+4]
-            extra_data = request[idx+4:]
-        else:
-            header_data = request
-            extra_data = b''
+        # Respuesta Profesional Inmediata
+        client_socket.sendall(b"HTTP/1.1 $ws_res\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
 
         remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        remote_socket.settimeout(3.0)
-        try:
-            remote_socket.connect(('127.0.0.1', $dest_port))
-        except:
-            try: remote_socket.connect(('127.0.0.1', 22))
-            except:
-                client_socket.close()
-                return
+        remote_socket.connect(('127.0.0.1', $dest_port))
         
-        remote_socket.settimeout(None)
-        client_socket.settimeout(None)
-        
-        req_str = header_data.decode('utf-8', 'ignore')
-        
-        if "http" in req_str.lower() or "connect" in req_str.lower() or "upgrade" in req_str.lower():
-            key = ""
-            for line in req_str.split("\r\n"):
-                if "sec-websocket-key:" in line.lower():
-                    key = line.split(":")[1].strip()
-            
-            res = "HTTP/1.1 $ws_res\r\n"
-            res += "Upgrade: websocket\r\n"
-            res += "Connection: Upgrade\r\n"
-            if key: res += "Sec-WebSocket-Accept: " + get_accept(key) + "\r\n"
-            res += "\r\n"
-            client_socket.sendall(res.encode())
+        # Hyper-Flow: Reenviar buffer inicial al servidor SSH (Si tiene datos extra)
+        idx = request.find(b'\r\n\r\n')
+        if idx != -1:
+            extra = request[idx+4:]
+            if extra: remote_socket.sendall(extra)
         else:
             remote_socket.sendall(request)
-        
-        # Reenviar los datos extra (SSH Handshake) al servidor remoto
-        if extra_data:
-            remote_socket.sendall(extra_data)
 
         threading.Thread(target=forward, args=(client_socket, remote_socket), daemon=True).start()
         threading.Thread(target=forward, args=(remote_socket, client_socket), daemon=True).start()
