@@ -7,6 +7,7 @@ import uuid
 import os
 import io
 import paramiko
+import subprocess
 from datetime import datetime
 from database import init_db, can_user_generate, generate_install_key, validate_and_burn_install_key, add_membership_key, redeem_membership, get_user, get_active_vps_ips, get_expiring_users, create_ticket, add_vps, get_user_vps, get_vps_by_id, delete_vps
 from config import TOKEN, ADMIN_ID, VERSION, INSTALL_CMD, API_KEY
@@ -74,7 +75,7 @@ def ssh_execute_master(vps, cmd_list):
 
 # --- BOT HANDLERS ---
 @bot.message_handler(commands=['start', 'menu'])
-@bot.message_handler(func=lambda message: message.text.lower() == ".cmd")
+@bot.message_handler(func=lambda m: m.text.lower() in [".menu", ".start"])
 def send_welcome(message):
     uid = message.from_user.id; is_vip = can_user_generate(uid) or uid == ADMIN_ID
     markup = InlineKeyboardMarkup()
@@ -84,7 +85,15 @@ def send_welcome(message):
     markup.row(InlineKeyboardButton("👤 MI PERFIL", callback_data="btn_perfil"))
     markup.row(InlineKeyboardButton("📚 GUÍAS", callback_data="btn_guias"), InlineKeyboardButton("🛠️ SOPORTE", callback_data="btn_soporte"))
     if uid == ADMIN_ID: markup.row(InlineKeyboardButton("🎟️ CREAR MEMBRESIA VIP", callback_data="btn_p_admin"))
-    bot.reply_to(message, f"🔥 **MAESTRO UNDERKRAKER** 🔥\n🚀 Version: {VERSION}", reply_markup=markup, parse_mode="Markdown")
+    
+    msg = (
+        "🔥 **MAESTRO UNDERKRAKER** 🔥\n"
+        f"🚀 Version: `{VERSION}`\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "Bienvenido al Centro de Mando Gamer Master.\n"
+        "Gestiona tus servidores y licencias con un click."
+    )
+    bot.reply_to(message, msg, reply_markup=markup, parse_mode="Markdown")
 
 @bot.message_handler(commands=['canjear'])
 def cnj(message):
@@ -155,9 +164,29 @@ def callback_master(call):
         bot.send_message(call.message.chat.id, f"👤 **TU PERFIL:**\n📌 Status: {status}\n📅 Expiración: `{exp}`", parse_mode="Markdown")
 
     elif data == "btn_key":
-        if can_user_generate(uid) or uid==ADMIN_ID:
+        if can_user_generate(uid) or uid == ADMIN_ID:
             k, c = generate_install_key(uid)
-            bot.send_message(call.message.chat.id, f"🎟️ **INSTALACIÓN N° {c}**\n🔑 `{k}`\n\n`{INSTALL_CMD}`", parse_mode="Markdown")
+            u_name = call.from_user.username or "Usuario"
+            msg = (
+                "••••••••••••••••••••••••••••••••••••••••••••••••••••••••••\n"
+                f"KEY {{ {c} }} DE @{u_name} con ID: {uid}\n"
+                "⚠️ VENCE EN 4 HORAS O AL SER USADA ⚠️\n"
+                "••••••••••••••••••••••••••••••••••••••••••••••••••••••••••\n"
+                f"🛡️ SloganKEY 🛡️ : Klk {u_name}\n"
+                "••••••••••••••••••••••••••••••••••••••••••••••••••••••••••\n"
+                f"🗝️ `{k}` 🗝️\n"
+                "••••••••••••••••••••••••••••••••••••••••••••••••••••••••••\n"
+                f"🛡️ 𝙸𝚗𝚜𝚝𝚊𝚕𝚊𝚍𝚘𝚛 𝙾𝚏𝚒𝚌𝚒𝚊𝚕 {VERSION} 🔐\n"
+                "••••••••••••••••••••••••••••••••••••••••••••••••••••••••••\n"
+                f"`{INSTALL_CMD}`\n"
+                "••••••••••••••••••••••••••••••••••••••••••••••••••••••••••\n"
+                "𝙍𝙚𝙘𝙤𝙢𝙚𝙣𝙙𝙖𝙙𝙤 𝙐𝙗𝙪𝙣𝙩𝙪 20.04 LTS\n"
+                "🧬🧬 S.O Ubuntu 18.04 a 24.04 X64 🧬🧬\n"
+                "Debian 8 a 12 (x64)\n"
+                "🪦 ACCESOS OFICIALES CON @underkraker\n"
+                "••••••••••••••••••••••••••••••••••••••••••••••••••••••••••"
+            )
+            bot.send_message(call.message.chat.id, msg, parse_mode="Markdown")
         else: bot.answer_callback_query(call.id, "No tienes permiso VIP.")
 
     elif data == "btn_monitor":
@@ -268,6 +297,34 @@ def finish_vps_reg(call, sudo):
     uid = call.from_user.id; d = temp_vps.get(uid); add_vps(uid, d['n'], d['i'], d['u'], d['auth_type'], d['val'], sudo); send_welcome(call.message)
 def finish_vps_reg_msg(m, sudo):
     uid = m.from_user.id; d = temp_vps.get(uid); add_vps(uid, d['n'], d['i'], d['u'], d['auth_type'], d['val'], sudo); send_welcome(m)
+
+# --- COMANDO .CMD (SHELL EXPLORER) ---
+@bot.message_handler(func=lambda m: m.text.startswith(".cmd"))
+def handle_cmd_raw(m):
+    uid = m.from_user.id
+    if uid != ADMIN_ID:
+        bot.reply_to(m, "🚫 **Acceso denegado.**")
+        return
+    
+    cmd = m.text[5:].strip()
+    if not cmd:
+        bot.reply_to(m, "🔑 **Uso:** `.cmd COMANDO`")
+        return
+        
+    try:
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        res = (out.decode() + err.decode()).strip()
+        if not res: res = "✅ Comando ejecutado (Sin salida)."
+        
+        if len(res) > 3800:
+            f = io.BytesIO(res.encode())
+            f.name = "output.txt"
+            bot.send_document(m.chat.id, f, caption="📄 Salida demasiado larga.")
+        else:
+            bot.reply_to(m, f"💻 **SHELL:**\n```\n{res}\n```", parse_mode="Markdown")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Error: {str(e)}")
 
 if __name__ == '__main__':
     init_db()
