@@ -11,6 +11,7 @@ import subprocess
 from datetime import datetime
 from database import init_db, can_user_generate, generate_install_key, validate_and_burn_install_key, add_membership_key, redeem_membership, get_user, get_active_vps_ips, get_expiring_users, create_ticket, add_vps, get_user_vps, get_vps_by_id, delete_vps
 from config import TOKEN, ADMIN_ID, VERSION, INSTALL_CMD, API_KEY
+VERSION = "V3.9.6 🔐"
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)

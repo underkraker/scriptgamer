@@ -20,12 +20,12 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # ======================================================
-# 🧹 ANTI-DUPLICADOS (MODO EXTERMINADOR)
+# 🧹 NUCLEAR CLEANUP (EXTERMINADOR v9.6)
 # ======================================================
-echo -e "\n${CYAN}[*] Exterminando procesos duplicados y zombies...${NC}"
+echo -e "\n${CYAN}[*] Exterminando todos los procesos de Python y zombies...${NC}"
 systemctl stop vps-bot >/dev/null 2>&1
+pkill -u root -9 python3 >/dev/null 2>&1
 pkill -9 -f bot.py >/dev/null 2>&1
-pkill -9 -f venv/bin/python3 >/dev/null 2>&1
 killall -9 python3 >/dev/null 2>&1
 fuser -k 5000/tcp >/dev/null 2>&1
 # ======================================================
