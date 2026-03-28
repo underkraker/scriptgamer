@@ -970,17 +970,72 @@ function create_user() {
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 2>/dev/null
     systemctl restart sshd 2>/dev/null
     
-    echo -e "\n   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${GREEN}[✔] Usuario Premium Creado Exitosamente:${NC}\n"
-    echo -e "      ${CYAN}👤 Usuario :${NC} ${WHITE}${BOLD}$username${NC}"
-    echo -e "      ${CYAN}🔑 Pass    :${NC} ${WHITE}${BOLD}$password${NC}"
-    echo -e "      ${CYAN}⏳ Expira  :${NC} ${WHITE}${BOLD}$days días${NC}"
-    echo -e "      ${CYAN}🔄 Límite  :${NC} ${WHITE}${BOLD}$limit conexión(es)${NC}\n"
-    echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    # NUEVO: Reporte de Acceso Maestro
+    show_access_details "$username" "$password" "$days" "$limit"
     
     echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
     read enter
     return
+}
+
+function show_access_details() {
+    local user=$1
+    local pass=$2
+    local days=$3
+    local limit=$4
+    local IP=$(curl -s4 ifconfig.me)
+
+    echo -e "\n   ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${WHITE}${BOLD}      🎫 TICKET DE ACCESO PREMIUM${NC}"
+    echo -e "   ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${CYAN}👤 Cliente :${NC} ${WHITE}$user${NC}"
+    echo -e "   ${CYAN}🔑 Pass    :${NC} ${WHITE}$pass${NC}"
+    echo -e "   ${CYAN}⏳ Validez :${NC} ${WHITE}$days días${NC}"
+    echo -e "   ${CYAN}🔄 Límite  :${NC} ${WHITE}$limit dispositivo(s)${NC}"
+    echo -e "   ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+    # Detección Pro de Protocolos
+    echo -e "   ${YELLOW}${BOLD}>> CONFIGURACIONES DISPONIBLES:${NC}"
+
+    # 1. SSH / Dropbear
+    DB_PORTS=$(netstat -tulnp | grep dropbear | awk '{print $4}' | cut -d: -f2 | sort -u | xargs)
+    if [ -n "$DB_PORTS" ]; then
+        echo -e "   ${GREEN}[SSH/Dropbear]${NC} ${WHITE}$IP:$DB_PORTS${NC}"
+    fi
+
+    # 2. SSL (Stunnel)
+    SSL_PORTS=$(netstat -tulnp | grep stunnel4 | awk '{print $4}' | cut -d: -f2 | sort -u | xargs)
+    if [ -n "$SSL_PORTS" ]; then
+        echo -e "   ${GREEN}[SSL/Stunnel]${NC} ${WHITE}$IP:$SSL_PORTS${NC}"
+    fi
+
+    # 3. WebSocket (HTTP Custom/Injector)
+    WS_PORT=$(netstat -tulnp | grep ws.py | awk '{print $4}' | cut -d: -f2 | head -1)
+    if [ -z "$WS_PORT" ]; then WS_PORT=$(netstat -tulnp | grep python3 | grep ":8080 " | awk '{print $4}' | cut -d: -f2); fi
+    if [ -n "$WS_PORT" ]; then
+        echo -e "   ${GREEN}[WebSocket]${NC} ${WHITE}Puerto: $WS_PORT${NC}"
+        echo -e "   ${CYAN}Payload WS:${NC} ${WHITE}GET / HTTP/1.1[crlf]Host: [host][crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]${NC}"
+    fi
+
+    # 4. SlowDNS
+    if [ -f /etc/gaming_vps/slowdns/server.pub ]; then
+        SDNS_NS=$(pgrep -a dnstt-server | awk '{print $NF}')
+        SDNS_PUB=$(cat /etc/gaming_vps/slowdns/server.pub)
+        echo -e "   ${GREEN}[SlowDNS]${NC} ${YELLOW}NS:${NC} ${WHITE}$SDNS_NS${NC}"
+        echo -e "   ${YELLOW}PUB KEY:${NC} ${WHITE}$SDNS_PUB${NC}"
+    fi
+
+    # 5. Xray/VLESS (Reality)
+    if [ -f /usr/local/etc/xray/config.json ]; then
+        X_UUID=$(jq -r '.inbounds[0].settings.clients[0].id' /usr/local/etc/xray/config.json)
+        X_PORT=$(jq -r '.inbounds[0].port' /usr/local/etc/xray/config.json)
+        X_SNI=$(jq -r '.inbounds[0].streamSettings.realitySettings.serverNames[0]' /usr/local/etc/xray/config.json)
+        X_PUB=$(xray x25519 -i $(jq -r '.inbounds[0].streamSettings.realitySettings.privateKey' /usr/local/etc/xray/config.json) | grep "Public key:" | awk '{print $3}')
+        echo -e "   ${GREEN}[Xray-Reality]${NC} ${WHITE}VLESS://$X_UUID@$IP:$X_PORT?security=reality&sni=$X_SNI&fp=chrome&pbk=$X_PUB&type=tcp&flow=xtls-rprx-vision${NC}"
+    fi
+
+    echo -e "   ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${CYAN}Creado por @underkraker - Gaming VPS Mastery${NC}\n"
 }
 
 function list_ssh_users() {
