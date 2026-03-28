@@ -24,6 +24,33 @@ echo -e "\n${CYAN}[*] Instalando dependencias base en el VPS...${NC}"
 apt-get update -y > /dev/null 2>&1
 apt-get install -y wget curl jq net-tools iproute2 cron ca-certificates iptables > /dev/null 2>&1
 
+# NUEVO: Módulo de Seguridad Maestro
+echo -e "\n${CYAN}======================================================${NC}"
+echo -e "${WHITE}${BOLD}      INGRESA TU KEY DE INSTALACIÓN${NC}"
+echo -e "${CYAN}======================================================${NC}"
+echo -e -n "${YELLOW}KEY: ${NC}"
+read USER_KEY
+
+if [ -z "$USER_KEY" ]; then
+    echo -e "${RED}❌ Error: La KEY no puede estar vacía.${NC}"
+    exit 1
+fi
+
+# Validar con el Bot
+echo -e "${CYAN}[*] Validando licencia con el servidor central...${NC}"
+RESPONSE=$(curl -s "http://34.201.40.170:5000/api/validar?key=$USER_KEY")
+STATUS=$(echo "$RESPONSE" | jq -r '.status')
+
+if [ "$STATUS" == "success" ]; then
+    OWNER=$(echo "$RESPONSE" | jq -r '.owner')
+    echo -e "${GREEN}✅ ACCESO CONCEDIDO: Bienvenido @$OWNER${NC}"
+    sleep 2
+else
+    echo -e "${RED}❌ ACCESO DENEGADO: Key inválida o ya utilizada.${NC}"
+    echo -e "${RED}Contacta a @underkraker para adquirir una licencia.${NC}"
+    exit 1
+fi
+
 # Despliegue Directo de Marca Blanca
 echo -e "\n${CYAN}[*] Iniciando despliegue de Marca Blanca v11.0 (Sin restricciones)...${NC}"
 
