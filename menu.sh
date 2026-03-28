@@ -323,28 +323,33 @@ function install_ws_python() {
     # Liberar el puerto si otro servicio (ej SSL) ya lo está usando
     liberar_puerto $ws_port
     
-    # Script WS Proxy Pro v3.0 (Anti-Disconnect Edition)
+    # Script WS Proxy Hyper-Flow v4.0 (Professional Edition)
     cat > /etc/gaming_vps/ws.py << EOF
-import socket, threading, sys, time, hashlib, base64
+import socket, threading, time, hashlib, base64
 
 def get_accept(key):
     guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
     return base64.b64encode(hashlib.sha1((key + guid).encode()).digest()).decode()
 
 def forward(src, dst):
-    while True:
-        try:
-            data = src.recv(8192)
+    try:
+        while True:
+            data = src.recv(131072)
             if not data: break
             dst.sendall(data)
-        except: break
+    except: pass
+    finally:
+        try: src.close()
+        except: pass
+        try: dst.close()
+        except: pass
 
 def handle_client(client_socket):
     try:
         time.sleep(0.1)
-        client_socket.settimeout(3.0)
+        client_socket.settimeout(5.0)
         try:
-            request = client_socket.recv(8192)
+            request = client_socket.recv(131072)
         except:
             request = b''
         
@@ -352,23 +357,34 @@ def handle_client(client_socket):
             client_socket.close()
             return
 
+        # --- LOGICA HYPER-FLOW (SPLIT DATA) ---
+        idx = request.find(b'\r\n\r\n')
+        if idx != -1:
+            header_data = request[:idx+4]
+            extra_data = request[idx+4:]
+        else:
+            header_data = request
+            extra_data = b''
+
         remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        remote_socket.settimeout(3.0)
         try:
             remote_socket.connect(('127.0.0.1', $dest_port))
         except:
-            # Reintento automático al puerto SSH nativo si el dest_port falla
             try: remote_socket.connect(('127.0.0.1', 22))
-            except: 
+            except:
                 client_socket.close()
                 return
-
-        client_socket.settimeout(None)
-        req_str = request.decode('utf-8', 'ignore')
         
-        if "Upgrade: websocket" in req_str.lower():
+        remote_socket.settimeout(None)
+        client_socket.settimeout(None)
+        
+        req_str = header_data.decode('utf-8', 'ignore')
+        
+        if "upgrade: websocket" in req_str.lower():
             key = ""
             for line in req_str.split("\r\n"):
-                if "Sec-WebSocket-Key:" in line:
+                if "sec-websocket-key:" in line.lower():
                     key = line.split(":")[1].strip()
             
             res = "HTTP/1.1 101 Switching Protocols\r\n"
@@ -377,11 +393,13 @@ def handle_client(client_socket):
             if key: res += "Sec-WebSocket-Accept: " + get_accept(key) + "\r\n"
             res += "\r\n"
             client_socket.sendall(res.encode())
-        elif "HTTP" in req_str or "CONNECT" in req_str:
+        elif "http" in req_str.lower() or "connect" in req_str.lower():
             client_socket.sendall(b"HTTP/1.1 200 Connection Established\r\n\r\n")
-        else:
-            remote_socket.sendall(request)
-            
+        
+        # Reenviar los datos extra (SSH Handshake) al servidor remoto
+        if extra_data:
+            remote_socket.sendall(extra_data)
+
         threading.Thread(target=forward, args=(client_socket, remote_socket), daemon=True).start()
         threading.Thread(target=forward, args=(remote_socket, client_socket), daemon=True).start()
     except:
@@ -392,12 +410,11 @@ try:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(('0.0.0.0', $ws_port))
-    server.listen(1000)
+    server.listen(2000)
     while True:
         client_sock, addr = server.accept()
         threading.Thread(target=handle_client, args=(client_sock,), daemon=True).start()
-except:
-    pass
+except: pass
 EOF
     
     cat > /etc/systemd/system/ws-python.service <<EOF
