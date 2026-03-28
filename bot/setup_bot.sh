@@ -44,9 +44,15 @@ echo -e "${CYAN}[*] Descargando archivos del Bot (Forzando última versión)...$
 T=$(date +%s)
 wget -qO bot.py "https://raw.githubusercontent.com/underkraker/scriptgamer/main/bot/bot.py?t=$T"
 wget -qO database.py "https://raw.githubusercontent.com/underkraker/scriptgamer/main/bot/database.py?t=$T"
-wget -qO config.py "https://raw.githubusercontent.com/underkraker/scriptgamer/main/bot/config.py?t=$T"
 wget -qO requirements.txt "https://raw.githubusercontent.com/underkraker/scriptgamer/main/bot/requirements.txt?t=$T"
 wget -qO migrate.py "https://raw.githubusercontent.com/underkraker/scriptgamer/main/bot/migrate.py?t=$T"
+
+# Proteger Configuración Local (No sobrescribir si existe)
+if [ ! -f "config.py" ]; then
+  wget -qO config.py "https://raw.githubusercontent.com/underkraker/scriptgamer/main/bot/config.py?t=$T"
+else
+  echo -e "${GREEN}[✔] config.py detectado. Protegiendo Token e ID locales.${NC}"
+fi
 
 # Instalar requerimientos en Entorno Virtual (VENV) - Profesional
 echo -e "${CYAN}[*] Creando Entorno Virtual (VENV)...${NC}"
