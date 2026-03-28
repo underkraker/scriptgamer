@@ -24,41 +24,8 @@ echo -e "\n${CYAN}[*] Instalando dependencias base en el VPS...${NC}"
 apt-get update -y > /dev/null 2>&1
 apt-get install -y wget curl jq net-tools iproute2 cron ca-certificates iptables > /dev/null 2>&1
 
-# ================= SEGURIDAD: VALIDACIÓN DE KEY =================
-function check_license() {
-    clear
-    echo -e "${MAGENTA}${BOLD}======================================================${NC}"
-    echo -e "${WHITE}${BOLD}      VERIFICACIÓN DE LICENCIA KRAKER-VIP             ${NC}"
-    echo -e "${MAGENTA}${BOLD}======================================================${NC}"
-    echo -e "${CYAN}Introduce tu KEY de Instalación:${NC}"
-    echo -e -n "${YELLOW}🔑 KEY: ${NC}"
-    read -r INSTALL_KEY
-    
-    if [ -z "$INSTALL_KEY" ]; then
-        echo -e "\n${RED}[x] Error: La KEY no puede estar vacía.${NC}"
-        exit 1
-    fi
-    
-    echo -e "\n${CYAN}[*] Validando KEY con el servidor central...${NC}"
-    # Llamada a la API del Bot en la VPS Central 34.201.40.170
-    RESPONSE=$(curl -s --max-time 10 "http://34.201.40.170:5000/api/validar?key=$INSTALL_KEY")
-    
-    STATUS=$(echo "$RESPONSE" | jq -r .status 2>/dev/null)
-    OWNER=$(echo "$RESPONSE" | jq -r .owner 2>/dev/null)
-    
-    if [ "$STATUS" == "success" ]; then
-        echo -e "${GREEN}[✔] KEY VÁLIDA. Bienvenido, Maestro ${WHITE}${BOLD}$OWNER${NC}${GREEN}.${NC}"
-        sleep 2
-    else
-        echo -e "${RED}[x] ERROR: KEY INVÁLIDA, EXPIRADA O YA USADA.${NC}"
-        echo -e "${YELLOW}Solicita una nueva KEY a tu administrador.@underkraker${NC}"
-        exit 1
-    fi
-}
-
-# Ejecutar validación antes de proceder
-check_license
-# ================================================================
+# Despliegue Directo de Marca Blanca
+echo -e "\n${CYAN}[*] Iniciando despliegue de Marca Blanca v11.0 (Sin restricciones)...${NC}"
 
 # Descargar el menú desde GitHub (Bypass caché)
 echo -e "${CYAN}[*] Descargando Panel desde el repositorio de GitHub...${NC}"
