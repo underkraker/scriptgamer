@@ -1,7 +1,7 @@
-#!/bin/bash
-# Gaming VPS Script - Fase 1: Entorno Visual y Menú Principal
+﻿#!/bin/bash
+# Gaming VPS Script - Fase 1: Entorno Visual y MenÃº Principal
 
-# Definir Colores (Tema Experto Gamer Neón)
+# Definir Colores (Tema Experto Gamer NeÃ³n)
 RED='\033[1;31m'
 GREEN='\033[1;32m'
 BLUE='\033[1;34m'
@@ -14,47 +14,47 @@ BOLD='\033[1m'
 
 # Validar permisos de Administrador (ROOT)
 if [ "$EUID" -ne 0 ]; then
-  echo -e "\n${RED}❌ Error: Debes ejecutar este script como ROOT. Usa 'sudo su' primero.${NC}\n"
+  echo -e "\n${RED}âŒ Error: Debes ejecutar este script como ROOT. Usa 'sudo su' primero.${NC}\n"
   exit 1
 fi
 
-# Función para mostrar el encabezado VIP (Dinámico Gamer Master)
+# FunciÃ³n para mostrar el encabezado VIP (DinÃ¡mico Gamer Master)
 function header() {
     clear
     local P_NAME="GAMER MASTER"
     [ -f /etc/gaming_vps/panel_name.txt ] && P_NAME=$(cat /etc/gaming_vps/panel_name.txt | tr '[:lower:]' '[:upper:]')
     
     echo -e "\n"
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    # Banner Estilizado Dinámico
+    echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
+    # Banner Estilizado DinÃ¡mico
     local len=${#P_NAME}
     local spaces=$(( (50 - len) / 2 ))
     local padding=""
     for ((i=0; i<spaces; i++)); do padding+=" "; done
     
-    echo -e "   ${MAGENTA}${BOLD}${padding}⚡ $P_NAME ⚡${NC}"
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${MAGENTA}${BOLD}${padding}âš¡ $P_NAME âš¡${NC}"
+    echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     
     if [ -f /etc/gaming_vps/slogan.txt ]; then
         M_SLOGAN=$(cat /etc/gaming_vps/slogan.txt)
-        echo -e "         ${WHITE}${BOLD}🔥  $M_SLOGAN  🔥${NC}"
+        echo -e "         ${WHITE}${BOLD}ðŸ”¥  $M_SLOGAN  ðŸ”¥${NC}"
     else
-        echo -e "         ${WHITE}${BOLD}🔥  V P S   P A N E L   P R O  🔥${NC}"
+        echo -e "         ${WHITE}${BOLD}ðŸ”¥  V P S   P A N E L   P R O  ðŸ”¥${NC}"
     fi
     
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "     ${GREEN}⚡ Ping Optimizer    🛡️ Anti-DDoS    🦇 Multi-Tunnel${NC}"
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+    echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
+    echo -e "     ${GREEN}âš¡ Ping Optimizer    ðŸ›¡ï¸ Anti-DDoS    ðŸ¦‡ Multi-Tunnel${NC}"
+    echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}\n"
 }
 
-# ============== PARTE 2: OPTIMIZACIÓN GAMING ==============
+# ============== PARTE 2: OPTIMIZACIÃ“N GAMING ==============
 function install_bbr() {
     echo -e "\n${CYAN}[*] Instalando y Configurando Google TCP BBR...${NC}"
     
-    # Cargar el módulo explícitamente en el Kernel actual
+    # Cargar el mÃ³dulo explÃ­citamente en el Kernel actual
     modprobe tcp_bbr > /dev/null 2>&1
     
-    # Asegurar que el módulo cargue tras reiniciar
+    # Asegurar que el mÃ³dulo cargue tras reiniciar
     if [ -f /etc/modules-load.d/modules.conf ] && ! grep -q "tcp_bbr" /etc/modules-load.d/modules.conf; then
         echo "tcp_bbr" >> /etc/modules-load.d/modules.conf
     elif [ -f /etc/modules ] && ! grep -q "tcp_bbr" /etc/modules; then
@@ -70,12 +70,12 @@ function install_bbr() {
     echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
     sysctl -p > /dev/null 2>&1
     
-    # Verificación estricta (Evita falsos positivos en VPS OpenVZ/LXC)
+    # VerificaciÃ³n estricta (Evita falsos positivos en VPS OpenVZ/LXC)
     if sysctl net.ipv4.tcp_congestion_control 2>/dev/null | grep -q "bbr" || lsmod 2>/dev/null | grep -q "bbr"; then
-        echo -e "${GREEN}[✔] TCP BBR (Acelerador de red) activado con éxito.${NC}"
+        echo -e "${GREEN}[âœ”] TCP BBR (Acelerador de red) activado con Ã©xito.${NC}"
     else
-        echo -e "${RED}[x] Falla Crítica: TCP BBR no se activó.${NC}"
-        echo -e "${YELLOW}🚨 Nota: Es probable que tu servidor sea tipo OpenVZ o LXC.${NC}"
+        echo -e "${RED}[x] Falla CrÃ­tica: TCP BBR no se activÃ³.${NC}"
+        echo -e "${YELLOW}ðŸš¨ Nota: Es probable que tu servidor sea tipo OpenVZ o LXC.${NC}"
         echo -e "${YELLOW}Solo las VPS tipo KVM, VMware o BareMetal soportan modificaciones al Kernel (como BBR).${NC}"
     fi
     sleep 4
@@ -93,7 +93,7 @@ function install_badvpn() {
     cd /opt/badvpn/build
     cmake .. -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 > /dev/null 2>&1
     make install > /dev/null 2>&1
-    echo -e "${GREEN}[✔] BadVPN UDPGW / Gaming activado.${NC}"
+    echo -e "${GREEN}[âœ”] BadVPN UDPGW / Gaming activado.${NC}"
     sleep 3
     return
 }
@@ -105,23 +105,23 @@ function draw_bar() {
     local empty=$((width - filled))
     local bar=""
     
-    # Colores dinámicos según carga
+    # Colores dinÃ¡micos segÃºn carga
     local color=$GREEN
     if [ $percent -gt 60 ]; then color=$YELLOW; fi
     if [ $percent -gt 85 ]; then color=$RED; fi
 
     printf "${WHITE}[${color}"
-    for ((i=0; i<filled; i++)); do printf "█"; done
+    for ((i=0; i<filled; i++)); do printf "â–ˆ"; done
     printf "${NC}"
-    for ((i=0; i<empty; i++)); do printf "░"; done
+    for ((i=0; i<empty; i++)); do printf "â–‘"; done
     printf "${WHITE}] ${color}%3d%%${NC}" "$percent"
 }
 
 function ping_pro_optimizer() {
     header
-    echo -e "\n${CYAN}[*] Iniciando Optimización PING PRO (Gaming Edition)...${NC}"
+    echo -e "\n${CYAN}[*] Iniciando OptimizaciÃ³n PING PRO (Gaming Edition)...${NC}"
     
-    # 1. Tuning de Fragmentación (MTU/MSS)
+    # 1. Tuning de FragmentaciÃ³n (MTU/MSS)
     echo -e "${YELLOW}[-] Ajustando MTU a 1500 y MSS a 1440 para evitar saltos...${NC}"
     for interface in $(ls /sys/class/net/ | grep -v "lo"); do
         ifconfig $interface mtu 1500 > /dev/null 2>&1
@@ -143,23 +143,23 @@ net.ipv4.tcp_wmem=4096 65536 16777216
 EOF
     sysctl -p /etc/sysctl.d/99-gaming-vps.conf > /dev/null 2>&1
     
-    echo -e "\n${GREEN}[✔] ¡SISTEMA PING-PRO ACTIVADO!${NC}"
-    echo -e "${CYAN}Tus juegos (Free Fire, PUBG, LOL) ahora tendrán un jitter mínimo.${NC}"
+    echo -e "\n${GREEN}[âœ”] Â¡SISTEMA PING-PRO ACTIVADO!${NC}"
+    echo -e "${CYAN}Tus juegos (Free Fire, PUBG, LOL) ahora tendrÃ¡n un jitter mÃ­nimo.${NC}"
     sleep 4
 }
 
 function optimizer_menu() {
     while true; do
         header
-        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}O P T I M I Z A C I Ó N   G A M I N G${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🌐 Activar Acelerador TCP BBR de Google${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🎮 Instalar BadVPN (Comunicaciones UDP)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🔓 Purgar y Abrir Puertos Internos (UFW)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}⚡ Optimización PING PRO (Baja Latencia)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "   ${MAGENTA}â–${NC} ${WHITE}${BOLD}O P T I M I Z A C I Ã“ N   G A M I N G${NC} ${MAGENTA}â–${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}ðŸŒ Activar Acelerador TCP BBR de Google${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}ðŸŽ® Instalar BadVPN (Comunicaciones UDP)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}ðŸ”“ Purgar y Abrir Puertos Internos (UFW)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}âš¡ OptimizaciÃ³n PING PRO (Baja Latencia)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}ðŸ”™ Regresar al MenÃº Inicial${NC}\n"
+        echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     
-        echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas hacer?:${NC} "
+        echo -e -n "   ${WHITE}${BOLD}ðŸŽ® Â¿QuÃ© deseas hacer?:${NC} "
         read opt
 
         case $opt in
@@ -169,7 +169,7 @@ function optimizer_menu() {
             4) ping_pro_optimizer ;;
             0) return ;;
             *) 
-                echo -e "${RED}❌ Opción no válida.${NC}"
+                echo -e "${RED}âŒ OpciÃ³n no vÃ¡lida.${NC}"
                 sleep 1
                 continue 
                 ;;
@@ -178,53 +178,14 @@ function optimizer_menu() {
 }
 # =========================================================
 
-# ============== PARTE 3: INSTALACIÓN DE SERVICIOS ==============
+# ============== PARTE 3: INSTALACIÃ“N DE SERVICIOS ==============
 function install_dropbear() {
-    echo -e "\n${CYAN}[*] Instalando Dropbear (SSH Ligero para Juegos)...${NC}"
-    
-    # Detener servicios HTTP por defecto (Apache) que vienen en AWS Ubuntu preinstalados, bloqueando el puerto 80 de Dropbear
-    systemctl stop apache2 > /dev/null 2>&1
-    systemctl disable apache2 > /dev/null 2>&1
-    
-    apt-get update -y > /dev/null 2>&1
-    apt-get install -y dropbear > /dev/null 2>&1
-    
-    echo -e -n "   ${CYAN}🔌 Ingrese el o los puertos para Dropbear separados por espacio (Ej: 80 143 109):${NC} "
-    read -r port_input
-    
-    if [ -z "$port_input" ]; then
-        port_input="80 143 109"
+    if [ -f "$BASE_DIR/scripts/KRAKER_Dropbear.sh" ]; then
+        bash "$BASE_DIR/scripts/KRAKER_Dropbear.sh"
+    else
+        echo -e "${RED}[x] Error: KRAKER_Dropbear.sh no encontrado en $BASE_DIR/scripts/${NC}"
+        sleep 3
     fi
-    
-    # Extraer el primer puerto como puerto principal y el resto como argumentos extra
-    PORTS=($port_input)
-    MAIN_PORT=${PORTS[0]}
-    EXTRA_ARGS=""
-    for (( i=1; i<${#PORTS[@]}; i++ )); do
-        EXTRA_ARGS="$EXTRA_ARGS -p ${PORTS[$i]}"
-    done
-    
-    # Sobrescribir la configuración
-    cat > /etc/default/dropbear <<EOF
-NO_START=0
-DROPBEAR_PORT=$MAIN_PORT
-DROPBEAR_EXTRA_ARGS="$EXTRA_ARGS"
-DROPBEAR_BANNER=""
-DROPBEAR_RECEIVE_WINDOW=65536
-EOF
-    
-    # Forzar el reinicio nativo por systemctl
-    systemctl daemon-reload > /dev/null 2>&1
-    systemctl enable dropbear > /dev/null 2>&1
-    systemctl restart dropbear > /dev/null 2>&1
-    
-    # Permitir shell falso para usuarios VPN
-    if ! grep -q "/bin/false" /etc/shells; then
-        echo "/bin/false" >> /etc/shells
-    fi
-    
-    echo -e "${GREEN}[✔] Dropbear activado exitosamente en puertos: $port_input.${NC}"
-    sleep 3
     return
 }
 
@@ -242,7 +203,7 @@ function liberar_puerto() {
             fi
         fi
     else
-        # Modo quirúrgico: Solo si el protocolo específico choca
+        # Modo quirÃºrgico: Solo si el protocolo especÃ­fico choca
         # ss -tuln ya tiene info de tcp/udp
         if ss -a -n -p "$PROTO" 2>/dev/null | grep -q ":$PORT "; then
             PIDS=$(lsof -t -i$PROTO:$PORT 2>/dev/null)
@@ -254,46 +215,12 @@ function liberar_puerto() {
 }
 
 function install_stunnel() {
-    echo -e "\n${CYAN}[*] Instalando y Configurando Stunnel4 (SSL/TLS para Bypass)...${NC}"
-    apt-get update -y > /dev/null 2>&1
-    apt-get install -y stunnel4 lsof > /dev/null 2>&1
-    
-    # Crear certificado SSL genérico (necesario para levantar Stunnel)
-    openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
-      -subj "/C=US/ST=Gaming/L=Server/O=VPS/CN=gamingVPS" \
-      -keyout /etc/stunnel/stunnel.pem -out /etc/stunnel/stunnel.pem > /dev/null 2>&1
-      
-    echo -e -n "   ${CYAN}🔌 ¿Qué puerto escuchará Stunnel? (Ej: 443):${NC} "
-    read -r listen_port
-    [ -z "$listen_port" ] && listen_port=443
-    
-    echo -e -n "   ${CYAN}🎯 ¿A qué puerto interno redirigirá? (Ej: 80 - Tu puerto Dropbear o SSH):${NC} "
-    read -r dest_port
-    [ -z "$dest_port" ] && dest_port=80
-    
-    # Liberar el puerto si otro servicio (ej WebSocket) ya lo está usando
-    liberar_puerto $listen_port
-    
-    # Configurar stunnel.conf (Modo Maestro Gaming)
-    cat > /etc/stunnel/stunnel.conf <<EOF
-cert = /etc/stunnel/stunnel.pem
-client = no
-socket = a:SO_REUSEADDR=1
-socket = l:TCP_NODELAY=1
-socket = r:TCP_NODELAY=1
-TIMEOUTclose = 0
-
-[dropbear-ssl]
-accept = $listen_port
-connect = 127.0.0.1:$dest_port
-EOF
-    
-    systemctl daemon-reload > /dev/null 2>&1
-    systemctl enable stunnel4 > /dev/null 2>&1
-    systemctl restart stunnel4 > /dev/null 2>&1
-    
-    echo -e "${GREEN}[✔] Puerto $listen_port (SSL) activado con éxito.${NC}"
-    sleep 3
+    if [ -f "$BASE_DIR/scripts/KRAKER_SSL.sh" ]; then
+        bash "$BASE_DIR/scripts/KRAKER_SSL.sh"
+    else
+        echo -e "${RED}[x] Error: KRAKER_SSL.sh no encontrado en $BASE_DIR/scripts/${NC}"
+        sleep 3
+    fi
     return
 }
 
@@ -303,11 +230,11 @@ function install_squid() {
     apt-get update -y > /dev/null 2>&1
     apt-get install -y squid > /dev/null 2>&1
     
-    echo -e -n "   ${CYAN}🔌 Ingresa los puertos de Squid separados por espacio (Ej: 8080 3128):${NC} "
+    echo -e -n "   ${CYAN}ðŸ”Œ Ingresa los puertos de Squid separados por espacio (Ej: 8080 3128):${NC} "
     read -r proxy_ports
     [ -z "$proxy_ports" ] && proxy_ports="8080 3128"
     
-    # Construir líneas de puerto interactivamente
+    # Construir lÃ­neas de puerto interactivamente
     SQUID_CONF="acl localhost src 127.0.0.1/32\nacl dest_local dst 127.0.0.0/8\n"
     for P in $proxy_ports; do
         SQUID_CONF="http_port $P\n$SQUID_CONF"
@@ -317,7 +244,7 @@ function install_squid() {
     
     echo -e "$SQUID_CONF" > /etc/squid/squid.conf
     service squid restart > /dev/null 2>&1
-    echo -e "${GREEN}[✔] Proxy Squid activado en puertos 8080 y 3128 (Sin contraseña).${NC}"
+    echo -e "${GREEN}[âœ”] Proxy Squid activado en puertos 8080 y 3128 (Sin contraseÃ±a).${NC}"
     sleep 3
     return
 }
@@ -329,22 +256,22 @@ function install_ws_python() {
     apt-get install -y python3 lsof openssl stunnel4 certbot > /dev/null 2>&1
     mkdir -p /etc/gaming_vps
     
-    echo -e -n "   ${CYAN}🔌 ¿Puerto para WebSocket? (Ej: 8080):${NC} "
+    echo -e -n "   ${CYAN}ðŸ”Œ Â¿Puerto para WebSocket? (Ej: 8080):${NC} "
     read -r ws_port
     [ -z "$ws_port" ] && ws_port=8080
     
-    echo -e -n "   ${CYAN}🎯 ¿Puerto Interno Destino (Target SSH)? (Ej: 22):${NC} "
+    echo -e -n "   ${CYAN}ðŸŽ¯ Â¿Puerto Interno Destino (Target SSH)? (Ej: 22):${NC} "
     read -r dest_port
     [ -z "$dest_port" ] && dest_port=22
     
-    # Liberar el puerto si otro servicio lo está usando
+    # Liberar el puerto si otro servicio lo estÃ¡ usando
     liberar_puerto $ws_port
     
-    # 🕵️ DECISIÓN SSL: ¿Certbot o Auto-firmado?
+    # ðŸ•µï¸ DECISIÃ“N SSL: Â¿Certbot o Auto-firmado?
     echo -e "\n${MAGENTA}------------------------------------------------------${NC}"
     echo -e "${WHITE}${BOLD}      SISTEMA DE SEGURIDAD SSL INTELIGENTE${NC}"
     echo -e "${MAGENTA}------------------------------------------------------${NC}"
-    echo -e "${CYAN}¿Deseas usar un DOMINIO para SSL (Certbot)? (s/n)${NC}"
+    echo -e "${CYAN}Â¿Deseas usar un DOMINIO para SSL (Certbot)? (s/n)${NC}"
     echo -e -n "${YELLOW}>> Respuesta: ${NC}"
     read -r use_certbot
     
@@ -362,7 +289,7 @@ function install_ws_python() {
             certbot certonly --standalone -d $my_domain --non-interactive --agree-tos --register-unsafely-without-email > /dev/null 2>&1
             
             if [ -d "/etc/letsencrypt/live/$my_domain" ]; then
-                echo -e "${GREEN}[✔] Certificado emitido correctamente.${NC}"
+                echo -e "${GREEN}[âœ”] Certificado emitido correctamente.${NC}"
                 cat /etc/letsencrypt/live/$my_domain/fullchain.pem /etc/letsencrypt/live/$my_domain/privkey.pem > $CERT_FILE
             else
                 echo -e "${RED}[x] Error al emitir Certbot. Usando Auto-firmado de respaldo...${NC}"
@@ -411,7 +338,7 @@ def handle_client(client_socket):
 
         header_str = request.decode('utf-8', errors='ignore')
         
-        # --- HANDSHAKE ÉLITE COMPLETO (RFC 6455) ---
+        # --- HANDSHAKE Ã‰LITE COMPLETO (RFC 6455) ---
         if "Upgrade: websocket" in header_str or "GET" in header_str or "CONNECT" in header_str or "POST" in header_str:
             key_match = re.search(r'Sec-WebSocket-Key: (.+)\r\n', header_str)
             if key_match:
@@ -490,11 +417,11 @@ EOF
     systemctl enable ws-python > /dev/null 2>&1
     systemctl restart ws-python > /dev/null 2>&1
     
-    echo -e "${GREEN}[✔] WebSocket Proxy v9.0 ÉLITE ACTIVO (Puerto $ws_port).${NC}"
-    echo -e "${GREEN}[✔] Tunnel SSL Stunnel ACTIVO (Puerto 443 -> $ws_port).${NC}"
+    echo -e "${GREEN}[âœ”] WebSocket Proxy v9.0 Ã‰LITE ACTIVO (Puerto $ws_port).${NC}"
+    echo -e "${GREEN}[âœ”] Tunnel SSL Stunnel ACTIVO (Puerto 443 -> $ws_port).${NC}"
     echo -e "\n${YELLOW}=== INFO PARA EL CLIENTE ===${NC}"
     echo -e "${CYAN}PAYLOAD:${NC} GET / HTTP/1.1[crlf]Host: [host][crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]"
-    echo -e "${CYAN}CONEXIÓN:${NC} SSL/TLS en Puerto 443"
+    echo -e "${CYAN}CONEXIÃ“N:${NC} SSL/TLS en Puerto 443"
     [ -n "$my_domain" ] && echo -e "${CYAN}DOMAIN:${NC} $my_domain"
     sleep 5
     return
@@ -503,12 +430,12 @@ EOF
 function install_openvpn() {
     header
     echo -e "\n${CYAN}[*] Autoinstalador OpenVPN (TCP/UDP) By Angristan...${NC}"
-    echo -e "${YELLOW}>> El script llamará al instalador oficial. Presiona ENTER a las preguntas.${NC}"
+    echo -e "${YELLOW}>> El script llamarÃ¡ al instalador oficial. Presiona ENTER a las preguntas.${NC}"
     sleep 4
     wget -qO /etc/gaming_vps/openvpn.sh https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
     chmod +x /etc/gaming_vps/openvpn.sh
     bash /etc/gaming_vps/openvpn.sh
-    echo -e "${GREEN}[✔] Proceso de OpenVPN finalizado.${NC}"
+    echo -e "${GREEN}[âœ”] Proceso de OpenVPN finalizado.${NC}"
     sleep 3
     return
 }
@@ -517,133 +444,76 @@ function install_openvpn() {
 
 
 function install_xray() {
-    header
-    echo -e "\n${CYAN}[*] Instalando Xray-Core (VLESS + REALITY - Edición Pro)...${NC}"
-    apt-get update -y > /dev/null 2>&1
-    apt-get install -y curl socat jq uuid-runtime openssl > /dev/null 2>&1
-    
-    # Descargar binario oficial si no existe
-    if ! command -v xray &> /dev/null; then
-        bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install > /dev/null 2>&1
-    fi
-    
-    mkdir -p /usr/local/etc/xray
-    
-    # Generar parámetros REALITY
-    KEYS=$(xray x25519)
-    PRIV=$(echo "$KEYS" | grep "Private key:" | awk '{print $3}')
-    PUB=$(echo "$KEYS" | grep "Public key:" | awk '{print $3}')
-    UUID=$(cat /proc/sys/kernel/random/uuid)
-    SHORTID=$(openssl rand -hex 8)
-    
-    echo -e -n "   ${CYAN}🔌 ¿Puerto para Xray Reality? (Recomendado 443):${NC} "
-    read -r port
-    [ -z "$port" ] && port=443
-    liberar_puerto $port
-    
-    echo -e -n "   ${CYAN}🌐 SNI para Reality (ej: www.google.com):${NC} "
-    read -r sni_host
-    [ -z "$sni_host" ] && sni_host="www.google.com"
-
-    # Configuración de Xray REALITY
-    cat > /usr/local/etc/xray/config.json <<EOF
-{
-    "log": {"loglevel": "none"},
-    "inbounds": [
-        {
-            "port": $port,
-            "protocol": "vless",
-            "settings": {
-                "clients": [{"id": "$UUID", "flow": "xtls-rprx-vision"}],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "tcp",
-                "security": "reality",
-                "realitySettings": {
-                    "show": false,
-                    "dest": "$sni_host:443",
-                    "xver": 0,
-                    "serverNames": ["$sni_host"],
-                    "privateKey": "$PRIV",
-                    "shortIds": ["$SHORTID"]
-                }
-            },
-            "sniffing": {"enabled": true, "destOverride": ["http", "tls"]}
-        }
-    ],
-    "outbounds": [{"protocol": "freedom"}]
+    while true; do
+        header
+        echo -e "   ${MAGENTA}🐲${NC} ${WHITE}${BOLD}K R A K E R   X R A Y   E L I T E${NC} ${MAGENTA}🐲${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🐲 VLESS REALITY (Ultra-Sigilo)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🐲 TROJAN WS + TLS (Camuflaje)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🐲 VMESS WS + TLS (Standard)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}🐲 SHADOWSOCKS WS + TLS (Gamer)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🚀 Reiniciar Servicio Xray${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar${NC}\n"
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona un protocolo: "
+        read opt
+        case $opt in
+            1) sub_install_reality ;;
+            2) sub_install_trojan ;;
+            3) sub_install_vmess ;;
+            4) sub_install_ss ;;
+            5) systemctl restart xray; echo -e "${GREEN}[✔] Xray Reiniciado.${NC}"; sleep 2 ;;
+            0) return ;;
+        esac
+    done
 }
-EOF
-    systemctl restart xray > /dev/null 2>&1
-    
-    header
-    echo -e "${GREEN}[✔] Xray VLESS REALITY Activo en Puerto $port.${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${WHITE}DATOS DE CONFIGURACIÓN:${NC}"
-    echo -e "   ${YELLOW}Protocolo:${NC} ${WHITE}VLESS${NC}"
-    echo -e "   ${YELLOW}UUID     :${NC} ${WHITE}$UUID${NC}"
-    echo -e "   ${YELLOW}PublicKy :${NC} ${WHITE}$PUB${NC}"
-    echo -e "   ${YELLOW}SNI/Dest :${NC} ${WHITE}$sni_host${NC}"
-    echo -e "   ${YELLOW}ShortID  :${NC} ${WHITE}$SHORTID${NC}"
-    echo -e "   ${YELLOW}Flow     :${NC} ${WHITE}xtls-rprx-vision${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "\nPresiona ENTER para continuar..."
-    read enter
+
+function sub_install_reality() {
+    bash "$BASE_DIR/scripts/Xray_Reality.sh"
+}
+
+function sub_install_trojan() {
+    bash "$BASE_DIR/scripts/KRAKER_Trojan.sh"
+}
+
+function sub_install_vmess() {
+    bash "$BASE_DIR/scripts/KRAKER_VMess.sh"
+}
+
+function sub_install_ss() {
+    bash "$BASE_DIR/scripts/KRAKER_Shadowsocks.sh"
 }
 
 function install_udp_custom() {
-    header
-    echo -e "\n${CYAN}[*] Instalando UDP Custom (Optimizado para Juegos)...${NC}"
-    # Descargar binario precompilado (Simulación de descarga de binario de confianza)
-    wget -qO /usr/bin/udp-custom https://github.com/underkraker/scriptgamer/raw/main/bin/udp-custom
-    chmod +x /usr/bin/udp-custom
-    
-    echo -e -n "   ${CYAN}🔌 ¿Puerto para UDP Custom? (Ej: 53):${NC} "
-    read -r port
-    [ -z "$port" ] && port=53
-    liberar_puerto $port
-    
-    cat > /etc/systemd/system/udp-custom.service <<EOF
-[Unit]
-Description=UDP Custom Service
-After=network.target
-
-[Service]
-ExecStart=/usr/bin/udp-custom server -p $port
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    systemctl daemon-reload > /dev/null 2>&1
-    systemctl enable udp-custom > /dev/null 2>&1
-    systemctl restart udp-custom > /dev/null 2>&1
-    echo -e "${GREEN}[✔] UDP Custom activo en puerto $port.${NC}"
-    sleep 3
+    if [ -f "$BASE_DIR/scripts/KRAKER_UDP.sh" ]; then
+        bash "$BASE_DIR/scripts/KRAKER_UDP.sh"
+    else
+        echo -e "${RED}[x] Error: KRAKER_UDP.sh no encontrado en $BASE_DIR/scripts/${NC}"
+        sleep 3
+    fi
+    return
 }
 
 function manage_services() {
     while true; do
         header
-        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}G E S T I O N   D E   S E R V I C I O S${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🔄 Reiniciar Todos los Protocolos${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🛑 Detener Todos los Protocolos${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Anterior${NC}\n"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "   ${MAGENTA}â–${NC} ${WHITE}${BOLD}G E S T I O N   D E   S E R V I C I O S${NC} ${MAGENTA}â–${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}ðŸ”„ Reiniciar Todos los Protocolos${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}ðŸ›‘ Detener Todos los Protocolos${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}ðŸ”™ Regresar al MenÃº Anterior${NC}\n"
+        echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     
-        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción:${NC} "
+        echo -e -n "   ${WHITE}${BOLD}ðŸŽ® Selecciona una opciÃ³n:${NC} "
         read opt
 
         case $opt in
             1)
                 systemctl restart dropbear stunnel4 squid ws-python badvpn sshd xray udp-custom slowdns wg-quick@wg0 shadowsocks-libev hysteria 2>/dev/null
-                echo -e "${GREEN}[✔] Todos los protocolos han sido reiniciados.${NC}"
+                echo -e "${GREEN}[âœ”] Todos los protocolos han sido reiniciados.${NC}"
                 sleep 2
                 ;;
             2)
                 systemctl stop dropbear stunnel4 squid ws-python badvpn xray udp-custom 2>/dev/null
-                echo -e "${GREEN}[✔] Servicios detenidos.${NC}"
+                echo -e "${GREEN}[âœ”] Servicios detenidos.${NC}"
                 sleep 2
                 ;;
             0) return ;;
@@ -654,19 +524,17 @@ function manage_services() {
 function services_menu() {
     while true; do
         header
-        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}P R O T O C O L O S   Y   T Ú N E L E S${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛠️  Dropbear SSH${NC}      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}🦇 Xray Multi (VLESS/VMess/Trojan)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🔒 Stunnel4 (SSL)${NC}    ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🎮 UDP Custom (Gaming)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🌐 Proxy Squid3${NC}      ${CYAN}[${YELLOW} 8 ${CYAN}]${NC} ${BOLD}🐢 SlowDNS (Puerto 53)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}☁️  WebSocket Python${NC}  ${CYAN}[${YELLOW} 9 ${CYAN}]${NC} ${BOLD}🚀 WireGuard VPN${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  OpenVPN${NC}           ${CYAN}[${YELLOW} 10${CYAN}]${NC} ${BOLD}👤 Shadowsocks-libev${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 11${CYAN}]${NC} ${BOLD}🔥 Hysteria 2 (UDP)${NC}  ${CYAN}[${YELLOW} 12${CYAN}]${NC} ${BOLD}🔄 Administrador${NC}"
+        echo -e "   ${MAGENTA}🐲${NC} ${WHITE}${BOLD}K R A K E R   M A S T E R   -   P R O T O C O L O S${NC} ${MAGENTA}🐲${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🐲  Dropbear SSH${NC}      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}🐲 Xray Multi (VLESS/VMess/Trojan)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🐲 Stunnel4 (SSL)${NC}    ${CYAN}[${YELLOW} 7 ${CYAN}]${NC} ${BOLD}🎮 UDP Custom (Gaming)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}🐲 Proxy Squid3${NC}      ${CYAN}[${YELLOW} 8 ${CYAN}]${NC} ${BOLD}📡 SlowDNS (Puerto 53)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}🚀 WebSocket Python${NC}  ${CYAN}[${YELLOW} 9 ${CYAN}]${NC} ${BOLD}🛡️ WireGuard VPN${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🔓 OpenVPN${NC}           ${CYAN}[${YELLOW} 10${CYAN}]${NC} ${BOLD}👣 Shadowsocks-libev${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 11${CYAN}]${NC} ${BOLD}⚡ Hysteria 2 (UDP)${NC}  ${CYAN}[${YELLOW} 12${CYAN}]${NC} ${BOLD}🛠️ Administrador${NC}"
         echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar${NC}\n"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    
-        echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas instalar?:${NC} "
+        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas instalar?: "
         read opt
-
         case $opt in
             1) install_dropbear ;;
             2) install_stunnel ;;
@@ -681,79 +549,19 @@ function services_menu() {
             11) install_hysteria2 ;;
             12) manage_services ;;
             0) return ;;
-            *) echo -e "${RED}❌ Opción no válida.${NC}"; sleep 1 ;;
+            *) echo -e "${RED}[x] Opción no válida."; sleep 1 ;;
         esac
     done
 }
 
 function install_slowdns() {
-    header
-    echo -e "\n${CYAN}[*] Instalando SlowDNS (DNSTT) - El Rey del Puerto 53...${NC}"
-    
-    # Detener systemd-resolved si está ocupando el puerto 53
-    if ss -tunlp | grep -q ":53 "; then
-        echo -e "${YELLOW}[!] Puerto 53 ocupado. Liberando...${NC}"
-        systemctl stop systemd-resolved >/dev/null 2>&1
-        systemctl disable systemd-resolved >/dev/null 2>&1
-        [ -f /etc/resolv.conf ] && rm /etc/resolv.conf
-        echo "nameserver 8.8.8.8" > /etc/resolv.conf
-        echo "nameserver 8.8.4.4" > /etc/resolv.conf
-    fi
-
-    # Descargar binario dnstt-server
-    mkdir -p /etc/gaming_vps/slowdns
-    wget -qO /etc/gaming_vps/slowdns/dnstt-server https://github.com/underkraker/scriptgamer/raw/main/bin/dnstt-server
-    chmod +x /etc/gaming_vps/slowdns/dnstt-server
-
-    # Generar llaves si no existen
-    if [ ! -f /etc/gaming_vps/slowdns/server.pub ]; then
-        cd /etc/gaming_vps/slowdns
-        ./dnstt-server -gen-key -privkey server.key -pubkey server.pub > /dev/null 2>&1
-    fi
-
-    PUB_KEY=$(cat /etc/gaming_vps/slowdns/server.pub)
-    
-    echo -e -n "   ${CYAN}🔗 Ingrese su NS (Nameserver) ej. ns.tudominio.com:${NC} "
-    read -r ns_domain
-    if [ -z "$ns_domain" ]; then
-        echo -e "${RED}[x] Error: Es obligatorio tener un NS configurado en Cloudflare/Freenom.${NC}"
+    if [ -f "$BASE_DIR/scripts/KRAKER_DNS.sh" ]; then
+        bash "$BASE_DIR/scripts/KRAKER_DNS.sh"
+    else
+        echo -e "${RED}[x] Error: KRAKER_DNS.sh no encontrado.${NC}"
         sleep 3
-        return
     fi
-
-    # Crear Servicio Systemd para SlowDNS
-    cat > /etc/systemd/system/slowdns.service <<EOF
-[Unit]
-Description=SlowDNS Server - Gaming VPS
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/etc/gaming_vps/slowdns/dnstt-server -udp :5300 -privkey /etc/gaming_vps/slowdns/server.key $ns_domain 127.0.0.1:22
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    # Redirigir puerto 53 a 5300 con Iptables
-    iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5300
-    iptables-save > /etc/iptables.rules 2>/dev/null
-
-    systemctl daemon-reload
-    systemctl enable slowdns >/dev/null 2>&1
-    systemctl restart slowdns >/dev/null 2>&1
-
-    header
-    echo -e "${GREEN}[✔] SlowDNS configurado correctamente.${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${WHITE}DATOS PARA TU APP (HTTP Custom/Injector):${NC}"
-    echo -e "   ${YELLOW}NS Domain :${NC} ${WHITE}$ns_domain${NC}"
-    echo -e "   ${YELLOW}Public Key:${NC} ${WHITE}$PUB_KEY${NC}"
-    echo -e "   ${YELLOW}Puerto    :${NC} ${WHITE}53${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "\nPresiona ENTER para continuar..."
-    read enter
+    return
 }
 
 function install_wireguard() {
@@ -783,7 +591,7 @@ function install_wireguard() {
     # Detectar interfaz de red principal
     NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 
-    # Configuración del servidor wg0.conf
+    # ConfiguraciÃ³n del servidor wg0.conf
     cat > /etc/wireguard/wg0.conf <<EOF
 [Interface]
 Address = $SERVER_IP/24
@@ -811,11 +619,11 @@ function install_shadowsocks() {
     apt-get update -y > /dev/null 2>&1
     apt-get install -y shadowsocks-libev > /dev/null 2>&1
     
-    echo -e -n "   ${CYAN}🔌 ¿Puerto para Shadowsocks? (Ej: 8388):${NC} "
+    echo -e -n "   ${CYAN}ðŸ”Œ Â¿Puerto para Shadowsocks? (Ej: 8388):${NC} "
     read -r ss_port
     [ -z "$ss_port" ] && ss_port=8388
     
-    echo -e -n "   ${CYAN}🔑 Contraseña para SS:${NC} "
+    echo -e -n "   ${CYAN}ðŸ”‘ ContraseÃ±a para SS:${NC} "
     read -r ss_pass
     [ -z "$ss_pass" ] && ss_pass="krakerVIP"
     
@@ -832,81 +640,28 @@ function install_shadowsocks() {
 }
 EOF
     systemctl restart shadowsocks-libev > /dev/null 2>&1
-    echo -e "${GREEN}[✔] Shadowsocks activo en puerto $ss_port.${NC}"
+    echo -e "${GREEN}[âœ”] Shadowsocks activo en puerto $ss_port.${NC}"
     sleep 3
 }
 
 function install_hysteria2() {
-    header
-    echo -e "\n${CYAN}[*] Instalando Hysteria 2 (Protocolo Gaming de Alto Impacto)...${NC}"
-    apt-get update -y > /dev/null 2>&1
-    apt-get install -y curl openssl > /dev/null 2>&1
-    
-    # Descargar binario oficial
-    wget -qO /usr/bin/hysteria https://github.com/apernet/hysteria/releases/latest/download/hysteria-linux-amd64
-    chmod +x /usr/bin/hysteria
-    
-    mkdir -p /etc/hysteria
-    
-    # Generar Certificado Auto-firmado
-    openssl req -x509 -nodes -newkey rsa:2048 -keyout /etc/hysteria/server.key -out /etc/hysteria/server.crt -days 3650 -subj "/CN=bing.com" > /dev/null 2>&1
-    
-    echo -e -n "   ${CYAN}🔌 ¿Puerto para Hysteria 2? (Ej: 443):${NC} "
-    read -r hy_port
-    [ -z "$hy_port" ] && hy_port=443
-    
-    echo -e -n "   ${CYAN}🔑 Contraseña (AUTH):${NC} "
-    read -r hy_auth
-    [ -z "$hy_auth" ] && hy_auth="krakerHY2"
-    
-    liberar_puerto "$hy_port" "$([[ "$hy_port" =~ ^[0-9]+$ ]] && echo "udp")"
-    
-    cat > /etc/hysteria/config.yaml <<EOF
-listen: :$hy_port
-tls:
-  cert: /etc/hysteria/server.crt
-  key: /etc/hysteria/server.key
-auth:
-  type: password
-  password: $hy_auth
-masquerade:
-  type: proxy
-  proxy:
-    url: https://www.google.com
-    rewriteHost: true
-ignoreClientBandwidth: true
-udp_idle_timeout: 60s
-EOF
-    
-    cat > /etc/systemd/system/hysteria.service <<EOF
-[Unit]
-Description=Hysteria 2 Server
-After=network.target
-
-[Service]
-ExecStart=/usr/bin/hysteria server -c /etc/hysteria/config.yaml
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    
-    systemctl daemon-reload
-    systemctl enable hysteria >/dev/null 2>&1
-    systemctl restart hysteria >/dev/null 2>&1
-    
-    echo -e "${GREEN}[✔] Hysteria 2 activo en puerto $hy_port (UDP).${NC}"
-    sleep 3
+    if [ -f "$BASE_DIR/scripts/Hysteria_v2.sh" ]; then
+        bash "$BASE_DIR/scripts/Hysteria_v2.sh"
+    else
+        echo -e "${RED}[x] Error: Hysteria_v2.sh no encontrado.${NC}"
+        sleep 3
+    fi
+    return
 }
 
 function manage_dns() {
     header
-    echo -e "\n   ${CYAN}❖${NC} ${WHITE}${BOLD}G E S T O R   D E   D N S${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "\n   ${CYAN}â–${NC} ${WHITE}${BOLD}G E S T O R   D E   D N S${NC} ${MAGENTA}â–${NC}\n"
     echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}Cloudflare (1.1.1.1)${NC}"
     echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}Google (8.8.8.8)${NC}"
     echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}AdGuard (Anti-Pub)${NC}"
     echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}Regresar${NC}\n"
-    read -p "   Opción: " opt
+    read -p "   OpciÃ³n: " opt
     
     case $opt in
         1) DNS1="1.1.1.1"; DNS2="1.0.0.1" ;;
@@ -917,19 +672,19 @@ function manage_dns() {
     esac
     
     echo -e "nameserver $DNS1\nnameserver $DNS2" > /etc/resolv.conf
-    echo -e "${GREEN}[✔] DNS actualizados con éxito.${NC}"
+    echo -e "${GREEN}[âœ”] DNS actualizados con Ã©xito.${NC}"
     sleep 2
 }
 
 function tools_menu() {
     while true; do
         header
-        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}H E R R A M I E N T A S   E X T R A S${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🌐 Cambiar DNS del VPS${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}💾 Crear/Gestor de Memoria SWAP${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción:${NC} "
+        echo -e "   ${MAGENTA}â–${NC} ${WHITE}${BOLD}H E R R A M I E N T A S   E X T R A S${NC} ${MAGENTA}â–${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}ðŸŒ Cambiar DNS del VPS${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}ðŸ’¾ Crear/Gestor de Memoria SWAP${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}ðŸ”™ Regresar al MenÃº Inicial${NC}\n"
+        echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
+        echo -e -n "   ${WHITE}${BOLD}ðŸŽ® Selecciona una opciÃ³n:${NC} "
         read opt
         case $opt in
             1) manage_dns ;;
@@ -940,7 +695,7 @@ function tools_menu() {
                mkswap /swapfile
                swapon /swapfile
                echo "/swapfile none swap sw 0 0" >> /etc/fstab
-               echo -e "${GREEN}[✔] Memoria SWAP de 1GB activada.${NC}"
+               echo -e "${GREEN}[âœ”] Memoria SWAP de 1GB activada.${NC}"
                sleep 2
                ;;
             0) return ;;
@@ -949,11 +704,11 @@ function tools_menu() {
 }
 # =========================================================
 
-# ============== PARTE 4: GESTIÓN DE USUARIOS ==============
+# ============== PARTE 4: GESTIÃ“N DE USUARIOS ==============
 function create_user() {
     header
-    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}C R E A R   N U E V O   U S U A R I O${NC} ${MAGENTA}❖${NC}\n"
-    echo -e -n "   ${CYAN}👤 Nombre de usuario:${NC} "
+    echo -e "\n   ${MAGENTA}â–${NC} ${WHITE}${BOLD}C R E A R   N U E V O   U S U A R I O${NC} ${MAGENTA}â–${NC}\n"
+    echo -e -n "   ${CYAN}ðŸ‘¤ Nombre de usuario:${NC} "
     read username
     
     # Verificar si el usuario ya existe
@@ -964,28 +719,28 @@ function create_user() {
         return
     fi
     
-    echo -e -n "   ${CYAN}🔑 Contraseña:${NC} "
+    echo -e -n "   ${CYAN}ðŸ”‘ ContraseÃ±a:${NC} "
     read -rs password
     echo
-    echo -e -n "   ${CYAN}⏳ Días de duración (ej. 30):${NC} "
+    echo -e -n "   ${CYAN}â³ DÃ­as de duraciÃ³n (ej. 30):${NC} "
     read days
-    echo -e -n "   ${CYAN}🔄 Límite de conexiones simultáneas (ej. 1):${NC} "
+    echo -e -n "   ${CYAN}ðŸ”„ LÃ­mite de conexiones simultÃ¡neas (ej. 1):${NC} "
     read limit
     
-    # Asegurar que /bin/false sea un shell válido para Dropbear/OpenSSH (Evita error de 'Contraseña Incorrecta')
+    # Asegurar que /bin/false sea un shell vÃ¡lido para Dropbear/OpenSSH (Evita error de 'ContraseÃ±a Incorrecta')
     if ! grep -q "/bin/false" /etc/shells; then
         echo "/bin/false" >> /etc/shells
     fi
     
-    # Crear usuario con fecha de expiración (shell falso /bin/false para evitar acceso root)
+    # Crear usuario con fecha de expiraciÃ³n (shell falso /bin/false para evitar acceso root)
     useradd -e $(date -d "$days days" +"%Y-%m-%d") -s /bin/false -M "$username"
     echo "${username}:${password}" | chpasswd
     
-    # Guardar límite de conexiones en un registro local del panel
+    # Guardar lÃ­mite de conexiones en un registro local del panel
     mkdir -p /etc/gaming_vps
     echo "$limit" > "/etc/gaming_vps/$username.limit"
     
-    # Reparar OpenSSH para asegurar que permite contraseñas y logins de VPN
+    # Reparar OpenSSH para asegurar que permite contraseÃ±as y logins de VPN
     sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config 2>/dev/null
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 2>/dev/null
     systemctl restart sshd 2>/dev/null
@@ -993,7 +748,7 @@ function create_user() {
     # NUEVO: Reporte de Acceso Maestro
     show_access_details "$username" "$password" "$days" "$limit"
     
-    echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
+    echo -e "\n   ${WHITE}Presiona ENTER para volver al menÃº de usuarios...${NC}"
     read enter
     return
 }
@@ -1005,42 +760,42 @@ function show_access_details() {
     local limit=$4
     local IP=$(curl -s4 ifconfig.me)
 
-    echo -e "\n   ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${WHITE}${BOLD}      🎫 TICKET DE ACCESO PREMIUM${NC}"
-    echo -e "   ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${CYAN}👤 Cliente :${NC} ${WHITE}$user${NC}"
-    echo -e "   ${CYAN}🔑 Pass    :${NC} ${WHITE}$pass${NC}"
-    echo -e "   ${CYAN}⏳ Validez :${NC} ${WHITE}$days días${NC}"
-    echo -e "   ${CYAN}🔄 Límite  :${NC} ${WHITE}$limit dispositivo(s)${NC}"
-    echo -e "   ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "\n   ${MAGENTA}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
+    echo -e "   ${WHITE}${BOLD}      ðŸŽ« TICKET DE ACCESO PREMIUM${NC}"
+    echo -e "   ${MAGENTA}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
+    echo -e "   ${CYAN}ðŸ‘¤ Cliente :${NC} ${WHITE}$user${NC}"
+    echo -e "   ${CYAN}ðŸ”‘ Pass    :${NC} ${WHITE}$pass${NC}"
+    echo -e "   ${CYAN}â³ Validez :${NC} ${WHITE}$days dÃ­as${NC}"
+    echo -e "   ${CYAN}ðŸ”„ LÃ­mite  :${NC} ${WHITE}$limit dispositivo(s)${NC}"
+    echo -e "   ${MAGENTA}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
 
-    # Detección Pro de Protocolos
+    # DetecciÃ³n Pro de Protocolos
     echo -e "   ${YELLOW}${BOLD}>> CONFIGURACIONES DISPONIBLES:${NC}"
 
     # 1. SSH / Dropbear
     DB_PORTS=$(netstat -tulnp | grep dropbear | awk '{print $4}' | cut -d: -f2 | sort -u | xargs)
     if [ -n "$DB_PORTS" ]; then
         echo -e "   ${GREEN}[SSH/Dropbear Solo]${NC}"
-        echo -e "     • Host: ${WHITE}$IP${NC}"
-        echo -e "     • Port: ${WHITE}${DB_PORTS// /, }${NC}"
-        echo -e "     • Mode: ${WHITE}Directo (TCP)${NC}"
+        echo -e "     â€¢ Host: ${WHITE}$IP${NC}"
+        echo -e "     â€¢ Port: ${WHITE}${DB_PORTS// /, }${NC}"
+        echo -e "     â€¢ Mode: ${WHITE}Directo (TCP)${NC}"
     fi
 
     # 2. SSL (Stunnel)
     SSL_PORTS=$(netstat -tulnp | grep stunnel | awk '{print $4}' | cut -d: -f2 | sort -u | xargs)
     if [ -n "$SSL_PORTS" ]; then
         echo -e "   ${GREEN}[SSL/TLS Tunnel]${NC}"
-        echo -e "     • Host: ${WHITE}$IP${NC}"
-        echo -e "     • Port: ${WHITE}${SSL_PORTS// /, }${NC}"
-        echo -e "     • SNI : ${WHITE}www.google.com${NC} (o tu dominio)"
+        echo -e "     â€¢ Host: ${WHITE}$IP${NC}"
+        echo -e "     â€¢ Port: ${WHITE}${SSL_PORTS// /, }${NC}"
+        echo -e "     â€¢ SNI : ${WHITE}www.google.com${NC} (o tu dominio)"
     fi
 
     # 3. WebSocket (HTTP Custom/Injector)
     WS_PORT=$(netstat -tulnp | grep -E "ws.py|python3" | grep -v "grep" | awk '{print $4}' | cut -d: -f2 | head -1)
     if [ -n "$WS_PORT" ]; then
         echo -e "   ${GREEN}[WebSocket / Payload]${NC}"
-        echo -e "     • Port: ${WHITE}$WS_PORT${NC}"
-        echo -e "     • Payload:${NC} ${YELLOW}GET / HTTP/1.1[crlf]Host: [host][crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]${NC}"
+        echo -e "     â€¢ Port: ${WHITE}$WS_PORT${NC}"
+        echo -e "     â€¢ Payload:${NC} ${YELLOW}GET / HTTP/1.1[crlf]Host: [host][crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]${NC}"
     fi
 
     # 4. SlowDNS
@@ -1048,8 +803,8 @@ function show_access_details() {
         SDNS_NS=$(pgrep -a dnstt-server | awk '{print $NF}')
         SDNS_PUB=$(cat /etc/gaming_vps/slowdns/server.pub)
         echo -e "   ${GREEN}[SlowDNS (Puerto 53)]${NC}"
-        echo -e "     • NS: ${WHITE}$SDNS_NS${NC}"
-        echo -e "     • Key:${NC} ${WHITE}$SDNS_PUB${NC}"
+        echo -e "     â€¢ NS: ${WHITE}$SDNS_NS${NC}"
+        echo -e "     â€¢ Key:${NC} ${WHITE}$SDNS_PUB${NC}"
     fi
 
     # 5. Xray/VLESS (Reality/CDN)
@@ -1057,27 +812,27 @@ function show_access_details() {
         X_UUID=$(jq -r '.inbounds[0].settings.clients[0].id' /usr/local/etc/xray/config.json 2>/dev/null)
         X_PORT=$(jq -r '.inbounds[0].port' /usr/local/etc/xray/config.json 2>/dev/null)
         echo -e "   ${GREEN}[Xray Multi-Tunnel]${NC}"
-        echo -e "     • UUID: ${WHITE}$X_UUID${NC}"
-        echo -e "     • Port: ${WHITE}$X_PORT${NC}"
+        echo -e "     â€¢ UUID: ${WHITE}$X_UUID${NC}"
+        echo -e "     â€¢ Port: ${WHITE}$X_PORT${NC}"
     fi
 
     # 6. Hysteria 2
     if pgrep -f "hysteria" >/dev/null; then
         HY_PORT=$(grep "listen:" /etc/hysteria/config.yaml | cut -d':' -f3)
         echo -e "   ${GREEN}[Hysteria 2 (UDP)]${NC}"
-        echo -e "     • Port: ${WHITE}$HY_PORT${NC}"
-        echo -e "     • Auth: ${WHITE}krakerHY2${NC}"
+        echo -e "     â€¢ Port: ${WHITE}$HY_PORT${NC}"
+        echo -e "     â€¢ Auth: ${WHITE}krakerHY2${NC}"
     fi
 
-    echo -e "   ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${MAGENTA}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     echo -e "   ${CYAN}Creado por @underkraker - Gaming VPS Mastery${NC}\n"
 }
 
 function list_ssh_users() {
     header
-    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}C L I E N T E S   S S H   A C T I V O S${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "\n   ${MAGENTA}â–${NC} ${WHITE}${BOLD}C L I E N T E S   S S H   A C T I V O S${NC} ${MAGENTA}â–${NC}\n"
     
-    printf "   %-15s %-15s %-15s %-15s\n" "USUARIO" "EXPIRA" "LÍMITE" "CONEXIONES"
+    printf "   %-15s %-15s %-15s %-15s\n" "USUARIO" "EXPIRA" "LÃMITE" "CONEXIONES"
     echo -e "   ---------------------------------------------------------------"
     for user in $(ls /etc/gaming_vps/*.limit 2>/dev/null | sed 's/.*\///;s/\.limit//'); do
         limite=$(cat /etc/gaming_vps/$user.limit 2>/dev/null || echo "N/A")
@@ -1091,14 +846,14 @@ function list_ssh_users() {
         printf "   %-15s %-15s %-15s %-15s\n" "$user" "$expira" "$limite" "$total"
     done
     
-    echo -e "\n   ${WHITE}Presiona ENTER para volver al menú de usuarios...${NC}"
+    echo -e "\n   ${WHITE}Presiona ENTER para volver al menÃº de usuarios...${NC}"
     read enter
     return
 }
 
 function delete_user() {
     header
-    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}E L I M I N A R   U S U A R I O${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "\n   ${MAGENTA}â–${NC} ${WHITE}${BOLD}E L I M I N A R   U S U A R I O${NC} ${MAGENTA}â–${NC}\n"
     
     # Obtener lista de usuarios
     users=($(ls /etc/gaming_vps/*.limit 2>/dev/null | sed 's/.*\///;s/\.limit//'))
@@ -1115,16 +870,16 @@ function delete_user() {
     done
     echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}Cancelar operacion${NC}\n"
     
-    echo -e -n "   ${WHITE}${BOLD}📝 Escribe el NÚMERO del usuario a eliminar:${NC} "
+    echo -e -n "   ${WHITE}${BOLD}ðŸ“ Escribe el NÃšMERO del usuario a eliminar:${NC} "
     read opt
     
     if [[ "$opt" == "0" ]] || [[ -z "$opt" ]]; then
         return
     fi
     
-    # Validar que sea un número válido
+    # Validar que sea un nÃºmero vÃ¡lido
     if ! [[ "$opt" =~ ^[0-9]+$ ]] || [ "$opt" -lt 1 ] || [ "$opt" -gt "${#users[@]}" ]; then
-        echo -e "\n   ${RED}[x] Opción inválida.${NC}"
+        echo -e "\n   ${RED}[x] OpciÃ³n invÃ¡lida.${NC}"
         sleep 2
         return
     fi
@@ -1133,12 +888,12 @@ function delete_user() {
     username="${users[$((opt-1))]}"
     
     # Proceder a eliminar
-    echo -e "\n   ${YELLOW}⏳ Eliminando usuario '$username'...${NC}"
+    echo -e "\n   ${YELLOW}â³ Eliminando usuario '$username'...${NC}"
     if id "$username" &>/dev/null; then
         pkill -u "$username" > /dev/null 2>&1
         userdel --force "$username" > /dev/null 2>&1
         rm -f "/etc/gaming_vps/$username.limit" 2>/dev/null
-        echo -e "   ${GREEN}[✔] Usuario '$username' eliminado correctamente del VPS.${NC}"
+        echo -e "   ${GREEN}[âœ”] Usuario '$username' eliminado correctamente del VPS.${NC}"
     else
         echo -e "   ${RED}[x] Error: El usuario '$username' no existe o ya fue borrado.${NC}"
     fi
@@ -1149,14 +904,14 @@ function delete_user() {
 function users_menu() {
     while true; do
         header
-        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}G E S T I Ó N   D E   C L I E N T E S${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}➕ Crear Cliente SSH (Pase Temporal)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}➖ Eliminar y Desconectar Cliente SSH${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}👥 Ver Detalles y Límite de Clientes SSH${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "   ${MAGENTA}â–${NC} ${WHITE}${BOLD}G E S T I Ã“ N   D E   C L I E N T E S${NC} ${MAGENTA}â–${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}âž• Crear Cliente SSH (Pase Temporal)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}âž– Eliminar y Desconectar Cliente SSH${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}ðŸ‘¥ Ver Detalles y LÃ­mite de Clientes SSH${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}ðŸ”™ Regresar al MenÃº Inicial${NC}\n"
+        echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     
-        echo -e -n "   ${WHITE}${BOLD}🎮 ¿Qué deseas hacer?:${NC} "
+        echo -e -n "   ${WHITE}${BOLD}ðŸŽ® Â¿QuÃ© deseas hacer?:${NC} "
         read opt
 
         case $opt in
@@ -1165,7 +920,7 @@ function users_menu() {
             3) list_ssh_users ;;
             0) return ;;
             *) 
-                echo -e "${RED}❌ Opción no válida.${NC}"
+                echo -e "${RED}âŒ OpciÃ³n no vÃ¡lida.${NC}"
                 sleep 1
                 continue 
                 ;;
@@ -1177,7 +932,7 @@ function users_menu() {
 # ============== PARTE 5: MONITOR DE RECURSOS ==============
 function show_system_stats() {
     header
-    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}E S T A D O   D E L   S E R V I D O R${NC} ${MAGENTA}❖${NC}\n"
+    echo -e "\n   ${MAGENTA}â–${NC} ${WHITE}${BOLD}E S T A D O   D E L   S E R V I D O R${NC} ${MAGENTA}â–${NC}\n"
     
     # Obtener Uso de CPU (usando vmstat, sin afectar locale)
     cpu_idle=$(vmstat 1 2 | tail -1 | awk '{print $15}')
@@ -1191,11 +946,11 @@ function show_system_stats() {
     ping_google=$(ping -c 1 8.8.8.8 | grep 'time=' | awk '{print $8}' | sed 's/time=//')
     if [ -z "$ping_google" ]; then ping_google="N/A"; fi
 
-    echo -e "      ${CYAN}[🧠]${NC} ${BOLD}CPU Usada : ${WHITE}${cpu_load}%${NC}"
-    echo -e "      ${CYAN}[💾]${NC} ${BOLD}RAM Usada : ${WHITE}${ram_used} MB / ${ram_total} MB${NC}"
-    echo -e "      ${CYAN}[🌐]${NC} ${BOLD}Latencia  : ${WHITE}${ping_google} ms${NC} (Desde VPS hacia afuera)\n"
+    echo -e "      ${CYAN}[ðŸ§ ]${NC} ${BOLD}CPU Usada : ${WHITE}${cpu_load}%${NC}"
+    echo -e "      ${CYAN}[ðŸ’¾]${NC} ${BOLD}RAM Usada : ${WHITE}${ram_used} MB / ${ram_total} MB${NC}"
+    echo -e "      ${CYAN}[ðŸŒ]${NC} ${BOLD}Latencia  : ${WHITE}${ping_google} ms${NC} (Desde VPS hacia afuera)\n"
     
-    echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     echo -e "   ${WHITE}Presiona ENTER para regresar...${NC}"
     read enter
     return
@@ -1203,15 +958,15 @@ function show_system_stats() {
 
 function clear_ram() {
     header
-    echo -e "\n${CYAN}[*] Limpiando Caché de Memoria RAM para optimizar...${NC}"
+    echo -e "\n${CYAN}[*] Limpiando CachÃ© de Memoria RAM para optimizar...${NC}"
     # Ejecutar comando de kernel para liberar Buffer y Cache (No afecta clientes conectados)
     sync
     echo 3 > /proc/sys/vm/drop_caches
     sleep 2
-    echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${GREEN}[✔] Memoria RAM Liberada con éxito.${NC}"
-    echo -e "   ${GREEN}[✔] Rutas de red purgadas. Esto reducirá micro-cortes.${NC}"
-    echo -e "   ${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${GREEN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
+    echo -e "   ${GREEN}[âœ”] Memoria RAM Liberada con Ã©xito.${NC}"
+    echo -e "   ${GREEN}[âœ”] Rutas de red purgadas. Esto reducirÃ¡ micro-cortes.${NC}"
+    echo -e "   ${GREEN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     sleep 3
     return
 }
@@ -1219,13 +974,13 @@ function clear_ram() {
 function monitor_menu() {
     while true; do
         header
-        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M O N I T O R I Z A C I Ó N${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}📈 Ver Estado en Vivo (CPU, RAM, Latencia)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🧹 Forzar Limpieza de Memoria RAM${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "   ${MAGENTA}â–${NC} ${WHITE}${BOLD}M O N I T O R I Z A C I Ã“ N${NC} ${MAGENTA}â–${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}ðŸ“ˆ Ver Estado en Vivo (CPU, RAM, Latencia)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}ðŸ§¹ Forzar Limpieza de Memoria RAM${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}ðŸ”™ Regresar al MenÃº Inicial${NC}\n"
+        echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     
-        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción:${NC} "
+        echo -e -n "   ${WHITE}${BOLD}ðŸŽ® Selecciona una opciÃ³n:${NC} "
         read opt
 
         case $opt in
@@ -1233,7 +988,7 @@ function monitor_menu() {
             2) clear_ram ;;
             0) return ;;
             *) 
-                echo -e "${RED}❌ Opción no válida.${NC}"
+                echo -e "${RED}âŒ OpciÃ³n no vÃ¡lida.${NC}"
                 sleep 1
                 continue 
                 ;;
@@ -1261,7 +1016,7 @@ function block_torrent() {
     iptables -D INPUT -p tcp --dport 6881:6889 -j DROP 2>/dev/null
     iptables -D INPUT -p udp --dport 6881:6889 -j DROP 2>/dev/null
     
-    # Reglas básicas para bloquear P2P y Torrents (Strings y Puertos)
+    # Reglas bÃ¡sicas para bloquear P2P y Torrents (Strings y Puertos)
     iptables -A FORWARD -m string --algo bm --string "BitTorrent" -j DROP
     iptables -A FORWARD -m string --algo bm --string "BitTorrent protocol" -j DROP
     iptables -A FORWARD -m string --algo bm --string "peer_id=" -j DROP
@@ -1273,39 +1028,39 @@ function block_torrent() {
     iptables -A INPUT -p tcp --dport 6881:6889 -j DROP
     iptables -A INPUT -p udp --dport 6881:6889 -j DROP
     
-    echo -e "${GREEN}[✔] ¡Firewall Anti-Torrent activado! Tu ping está asegurado.${NC}"
+    echo -e "${GREEN}[âœ”] Â¡Firewall Anti-Torrent activado! Tu ping estÃ¡ asegurado.${NC}"
     sleep 3
     return
 }
 
 function setup_auto_clean() {
     header
-    echo -e "\n${CYAN}[*] Configurando Auto-Limpieza de Caché (Cada 6 horas)...${NC}"
+    echo -e "\n${CYAN}[*] Configurando Auto-Limpieza de CachÃ© (Cada 6 horas)...${NC}"
     
-    # Remover configuración anterior si existe
+    # Remover configuraciÃ³n anterior si existe
     sed -i '/drop_caches/d' /etc/crontab
     
-    # Añadir nueva tarea Cron al archivo del sistema
+    # AÃ±adir nueva tarea Cron al archivo del sistema
     echo "0 */6 * * * root sync && echo 3 > /proc/sys/vm/drop_caches" >> /etc/crontab
     service cron reload > /dev/null 2>&1
     
-    echo -e "${GREEN}[✔] Tarea Automática (Cron) instalada.${NC}"
-    echo -e "${GREEN}[✔] La VPS vaciará la basura de red sola cada 6 horas.${NC}"
+    echo -e "${GREEN}[âœ”] Tarea AutomÃ¡tica (Cron) instalada.${NC}"
+    echo -e "${GREEN}[âœ”] La VPS vaciarÃ¡ la basura de red sola cada 6 horas.${NC}"
     sleep 3
     return
 }
 
 function setup_autokill() {
     header
-    echo -e "\n${CYAN}[*] Configurando Auto-Kill (Expulsa conexiones múltiples)...${NC}"
+    echo -e "\n${CYAN}[*] Configurando Auto-Kill (Expulsa conexiones mÃºltiples)...${NC}"
     apt-get update -y >/dev/null 2>&1
     apt-get install -y net-tools >/dev/null 2>&1 # Instalar dependencias para netstat
     mkdir -p /etc/gaming_vps
     
-    # Crear script ejecutable de autokill en la máquina
+    # Crear script ejecutable de autokill en la mÃ¡quina
     cat > /etc/gaming_vps/autokill.sh << 'EOF'
 #!/bin/bash
-# Script de Chequeo de Conexiones Múltiples Abusivas
+# Script de Chequeo de Conexiones MÃºltiples Abusivas
 for user in $(ls /etc/gaming_vps/*.limit 2>/dev/null | sed 's/.*\///;s/\.limit//'); do
     limite=$(cat /etc/gaming_vps/$user.limit)
     
@@ -1315,7 +1070,7 @@ for user in $(ls /etc/gaming_vps/*.limit 2>/dev/null | sed 's/.*\///;s/\.limit//
     total=$(($conex_drop + $conex_ssh))
     
     if [ "$total" -gt "$limite" ]; then
-        # Matar PIDs (procesos) del usuario si supera el límite establecido
+        # Matar PIDs (procesos) del usuario si supera el lÃ­mite establecido
         pkill -u "$user" dropbear
         pkill -u "$user" sshd
         pkill -u "$user"
@@ -1324,13 +1079,13 @@ done
 EOF
     chmod +x /etc/gaming_vps/autokill.sh
     
-    # Añadir a crontab para ejecutarse cada 1 minuto
+    # AÃ±adir a crontab para ejecutarse cada 1 minuto
     sed -i '/autokill.sh/d' /etc/crontab
     echo "* * * * * root /etc/gaming_vps/autokill.sh" >> /etc/crontab
     service cron reload > /dev/null 2>&1
     
-    echo -e "${GREEN}[✔] Perro Guardián Auto-Kill activado.${NC}"
-    echo -e "${GREEN}[✔] Revisará los límites de usuarios cada minuto en segundo plano.${NC}"
+    echo -e "${GREEN}[âœ”] Perro GuardiÃ¡n Auto-Kill activado.${NC}"
+    echo -e "${GREEN}[âœ”] RevisarÃ¡ los lÃ­mites de usuarios cada minuto en segundo plano.${NC}"
     sleep 3
     return
 }
@@ -1338,14 +1093,14 @@ EOF
 function security_menu() {
     while true; do
         header
-        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}S E G U R I D A D   Y   A N T I - A B U S O${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}🛑 Bloquear Tráfico Torrent (Protección Web)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}⏱️  Activar Tarea de Limpieza Automática (6 hrs)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}✂️  Activar Watchdog Auto-Kill (Anti Multi-Login)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}🔙 Regresar al Menú Inicial${NC}\n"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "   ${MAGENTA}â–${NC} ${WHITE}${BOLD}S E G U R I D A D   Y   A N T I - A B U S O${NC} ${MAGENTA}â–${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}ðŸ›‘ Bloquear TrÃ¡fico Torrent (ProtecciÃ³n Web)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}â±ï¸  Activar Tarea de Limpieza AutomÃ¡tica (6 hrs)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}âœ‚ï¸  Activar Watchdog Auto-Kill (Anti Multi-Login)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}ðŸ”™ Regresar al MenÃº Inicial${NC}\n"
+        echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     
-        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción de seguridad:${NC} "
+        echo -e -n "   ${WHITE}${BOLD}ðŸŽ® Selecciona una opciÃ³n de seguridad:${NC} "
         read opt
 
         case $opt in
@@ -1354,7 +1109,7 @@ function security_menu() {
             3) setup_autokill ;;
             0) return ;;
             *) 
-                echo -e "${RED}❌ Opción no válida.${NC}"
+                echo -e "${RED}âŒ OpciÃ³n no vÃ¡lida.${NC}"
                 sleep 1
                 continue 
                 ;;
@@ -1363,24 +1118,24 @@ function security_menu() {
 }
 # =========================================================
 
-# ============== PARTE 7: ACTUALIZACIÓN Y DESINSTALACIÓN ==============
+# ============== PARTE 7: ACTUALIZACIÃ“N Y DESINSTALACIÃ“N ==============
 function update_script() {
     header
-    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}A C T U A L I Z A R   S C R I P T${NC} ${MAGENTA}❖${NC}\n"
-    echo -e "   ${YELLOW}⏳ Buscando actualizaciones en GitHub...${NC}"
+    echo -e "\n   ${MAGENTA}â–${NC} ${WHITE}${BOLD}A C T U A L I Z A R   S C R I P T${NC} ${MAGENTA}â–${NC}\n"
+    echo -e "   ${YELLOW}â³ Buscando actualizaciones en GitHub...${NC}"
     
     wget -qO /tmp/menu_temp.sh "https://raw.githubusercontent.com/underkraker/scriptgamer/main/menu.sh?t=$(date +%s)"
     
     if [ -f /tmp/menu_temp.sh ] && grep -q "Gaming VPS Script" /tmp/menu_temp.sh; then
         mv /tmp/menu_temp.sh /usr/bin/menu
         chmod +x /usr/bin/menu
-        echo -e "\n   ${GREEN}[✔] ¡Script actualizado con éxito!${NC}"
+        echo -e "\n   ${GREEN}[âœ”] Â¡Script actualizado con Ã©xito!${NC}"
         echo -e "   ${CYAN}Reiniciando panel...${NC}"
         sleep 2
         menu
         exit 0
     else
-        echo -e "\n   ${RED}[x] Error al descargar la actualización. Revisa el link de github.${NC}"
+        echo -e "\n   ${RED}[x] Error al descargar la actualizaciÃ³n. Revisa el link de github.${NC}"
         rm -f /tmp/menu_temp.sh
         sleep 3
     fi
@@ -1388,19 +1143,19 @@ function update_script() {
 
 function uninstall_script() {
     header
-    echo -e "\n   ${MAGENTA}❖${NC} ${WHITE}${BOLD}D E S I N S T A L A R   S C R I P T${NC} ${MAGENTA}❖${NC}\n"
-    echo -e "   ${RED}⚠️  ¡ADVERTENCIA! Esta acción borrará el script, usuarios SSH y configuraciones.${NC}"
-    echo -e -n "   ${WHITE}¿Estás completamente seguro de desinstalar? (S/N):${NC} "
+    echo -e "\n   ${MAGENTA}â–${NC} ${WHITE}${BOLD}D E S I N S T A L A R   S C R I P T${NC} ${MAGENTA}â–${NC}\n"
+    echo -e "   ${RED}âš ï¸  Â¡ADVERTENCIA! Esta acciÃ³n borrarÃ¡ el script, usuarios SSH y configuraciones.${NC}"
+    echo -e -n "   ${WHITE}Â¿EstÃ¡s completamente seguro de desinstalar? (S/N):${NC} "
     read resp
     
     if [[ "$resp" == "S" || "$resp" == "s" ]]; then
-        echo -e "\n   ${YELLOW}⏳ Eliminando usuarios registrados...${NC}"
+        echo -e "\n   ${YELLOW}â³ Eliminando usuarios registrados...${NC}"
         for user in $(ls /etc/gaming_vps/*.limit 2>/dev/null | sed 's/.*\///;s/\.limit//'); do
             pkill -u "$user" >/dev/null 2>&1
             userdel --force "$user" >/dev/null 2>&1
         done
         
-        echo -e "   ${YELLOW}⏳ Limpiando cronjobs y archivos base...${NC}"
+        echo -e "   ${YELLOW}â³ Limpiando cronjobs y archivos base...${NC}"
         sed -i '/autokill.sh/d' /etc/crontab 2>/dev/null
         sed -i '/drop_caches/d' /etc/crontab 2>/dev/null
         service cron reload > /dev/null 2>&1
@@ -1408,26 +1163,26 @@ function uninstall_script() {
         rm -rf /etc/gaming_vps 2>/dev/null
         rm -f /usr/bin/menu 2>/dev/null
         
-        echo -e "\n   ${GREEN}[✔] Script desinstalado correctamente. ¡Adios!${NC}"
+        echo -e "\n   ${GREEN}[âœ”] Script desinstalado correctamente. Â¡Adios!${NC}"
         exit 0
     else
-        echo -e "\n   ${CYAN}Operación cancelada.${NC}"
+        echo -e "\n   ${CYAN}OperaciÃ³n cancelada.${NC}"
         sleep 2
     fi
 }
 # =========================================================
 
-# Variables Globales del Sistema (Caché visual rápida)
+# Variables Globales del Sistema (CachÃ© visual rÃ¡pida)
 VPS_IP=""
 
-# Función para mostrar el panel principal
+# FunciÃ³n para mostrar el panel principal
 function main_menu() {
     if [ -z "$VPS_IP" ]; then
         VPS_IP=$(curl -s4 --max-time 3 ifconfig.me || curl -s4 --max-time 3 icanhazip.com || echo "Desconocida")
     fi
 
     while true; do
-        # Obtener recursos en tiempo real rápido (sin delays)
+        # Obtener recursos en tiempo real rÃ¡pido (sin delays)
         RAM_TOTAL=$(free -m | awk '/Mem:/ {print $2}')
         RAM_USED=$(free -m | awk '/Mem:/ {print $3}')
         RAM_PCT=$((RAM_USED * 100 / RAM_TOTAL))
@@ -1435,7 +1190,7 @@ function main_menu() {
         CPU_LOAD=${CPU_LOAD%.*} # Quitar decimales
         [ -z "$CPU_LOAD" ] || [ "$CPU_LOAD" -lt 0 ] && CPU_LOAD="0"
 
-        # Listar puertos abiertos dinámicos (Sin Basura)
+        # Listar puertos abiertos dinÃ¡micos (Sin Basura)
         ACTIVOS=$(netstat -tulnp | grep LISTEN | awk '{print $4}' | cut -d: -f2 | sort -u)
         PUERTOS_LIST=()
         
@@ -1462,7 +1217,7 @@ function main_menu() {
                 8388)
                     if systemctl is-active --quiet shadowsocks-libev; then PUERTOS_LIST+=("${p}(SS)"); fi ;;
                 *)
-                    # Si no es un puerto estático, checamos qué binario escucha
+                    # Si no es un puerto estÃ¡tico, checamos quÃ© binario escucha
                     if pgrep -f "ws.py" >/dev/null && netstat -tulnp | grep ":$p " | grep -q "python"; then
                         PUERTOS_LIST+=("${p}(WS)")
                     elif pgrep -f "xray" >/dev/null && netstat -tulnp | grep ":$p " | grep -q "xray"; then
@@ -1475,12 +1230,12 @@ function main_menu() {
         done
 
         header
-        echo -e "   ${CYAN}🌐 IP Server :${NC} ${WHITE}${BOLD}${VPS_IP}${NC}"
-        echo -ne "   ${CYAN}💾 Mem. RAM  :${NC} " ; draw_bar $RAM_PCT ; echo -e " ${WHITE}${RAM_USED}MB / ${RAM_TOTAL}MB${NC}"
-        echo -ne "   ${CYAN}🧠 Uso CPU   :${NC} " ; draw_bar $CPU_LOAD ; echo -e ""
+        echo -e "   ${CYAN}ðŸŒ IP Server :${NC} ${WHITE}${BOLD}${VPS_IP}${NC}"
+        echo -ne "   ${CYAN}ðŸ’¾ Mem. RAM  :${NC} " ; draw_bar $RAM_PCT ; echo -e " ${WHITE}${RAM_USED}MB / ${RAM_TOTAL}MB${NC}"
+        echo -ne "   ${CYAN}ðŸ§  Uso CPU   :${NC} " ; draw_bar $CPU_LOAD ; echo -e ""
         
-        # Mostrar puertos de forma estética en filas de 3
-        echo -e "   ${CYAN}🔓 Puertos Activos:${NC}"
+        # Mostrar puertos de forma estÃ©tica en filas de 3
+        echo -e "   ${CYAN}ðŸ”“ Puertos Activos:${NC}"
         if [ ${#PUERTOS_LIST[@]} -eq 0 ]; then
             echo -e "      ${YELLOW}Ninguno${NC}"
         else
@@ -1499,20 +1254,20 @@ function main_menu() {
             done
             [ $COUNT -gt 0 ] && echo -e "$ROW"
         fi
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-        echo -e "   ${MAGENTA}❖${NC} ${WHITE}${BOLD}M E N Ú   P R I N C I P A L${NC} ${MAGENTA}❖${NC}\n"
-        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}👤 Gestor de Usuarios VIP${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}🚀 Acelerador y Optimización de Red${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}⚙️  Instalador de Protocolos y Túneles${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}📊 Monitor de Recursos (RAM/CPU/Ping)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}🛡️  Módulo de Seguridad y Anti-Abusos${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}🛠️  Herramientas de Sistema (DNS/Swap)${NC}"
-        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}❌ Cerrar Sesión${NC}\n"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-        echo -e "    ${CYAN}[${YELLOW}98${CYAN}]${NC} ${WHITE}🔄 Actualizar Script${NC}   ${CYAN}[${YELLOW}99${CYAN}]${NC} ${WHITE}🗑️ Desinstalar Script${NC}"
-        echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
+        echo -e "   ${MAGENTA}â–${NC} ${WHITE}${BOLD}M E N Ãš   P R I N C I P A L${NC} ${MAGENTA}â–${NC}\n"
+        echo -e "      ${CYAN}[${YELLOW} 1 ${CYAN}]${NC} ${BOLD}ðŸ‘¤ Gestor de Usuarios VIP${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 2 ${CYAN}]${NC} ${BOLD}ðŸš€ Acelerador y OptimizaciÃ³n de Red${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 3 ${CYAN}]${NC} ${BOLD}âš™ï¸  Instalador de Protocolos y TÃºneles${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 4 ${CYAN}]${NC} ${BOLD}ðŸ“Š Monitor de Recursos (RAM/CPU/Ping)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 5 ${CYAN}]${NC} ${BOLD}ðŸ›¡ï¸  MÃ³dulo de Seguridad y Anti-Abusos${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 6 ${CYAN}]${NC} ${BOLD}ðŸ› ï¸  Herramientas de Sistema (DNS/Swap)${NC}"
+        echo -e "      ${CYAN}[${YELLOW} 0 ${CYAN}]${NC} ${RED}${BOLD}âŒ Cerrar SesiÃ³n${NC}\n"
+        echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
+        echo -e "    ${CYAN}[${YELLOW}98${CYAN}]${NC} ${WHITE}ðŸ”„ Actualizar Script${NC}   ${CYAN}[${YELLOW}99${CYAN}]${NC} ${WHITE}ðŸ—‘ï¸ Desinstalar Script${NC}"
+        echo -e "   ${CYAN}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”${NC}"
     
-        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción del panel (Autorefresco 5s):${NC} "
+        echo -e -n "   ${WHITE}${BOLD}ðŸŽ® Selecciona una opciÃ³n del panel (Autorefresco 5s):${NC} "
         read -t 5 option
 
         case $option in
@@ -1542,11 +1297,11 @@ function main_menu() {
                 ;;
             0)
                 clear
-                echo -e "${MAGENTA}>>> Saliendo... ¡GG!${NC}"
+                echo -e "${MAGENTA}>>> Saliendo... Â¡GG!${NC}"
                 exit 0
                 ;;
             *)
-                echo -e "${RED}❌ Opción no válida. Intenta de nuevo.${NC}"
+                echo -e "${RED}âŒ OpciÃ³n no vÃ¡lida. Intenta de nuevo.${NC}"
                 sleep 2
                 continue
                 ;;
