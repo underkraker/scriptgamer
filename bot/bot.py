@@ -9,7 +9,7 @@ import io
 import paramiko
 import subprocess
 import html
-from datetime import datetime
+from datetime import datetime, timedelta
 from database import init_db, can_user_generate, generate_install_key, validate_and_burn_install_key, add_membership_key, redeem_membership, get_user, get_active_vps_ips, get_expiring_users, create_ticket, add_vps, get_user_vps, get_vps_by_id, delete_vps
 from config import TOKEN, ADMIN_ID, VERSION, INSTALL_CMD, API_KEY
 
@@ -267,7 +267,32 @@ def cu_final(m):
             f"systemctl restart sshd 2>/dev/null", f"systemctl restart dropbear 2>/dev/null"
         ]
         ok, out, err = ssh_execute_master(v, cmds)
-        if ok: bot.send_message(m.chat.id, f"✅ <b>CLIENTE CREADO!</b>\nUser: <code>{data['un']}</code>\nPass: <code>{data['pw']}</code>\nLímite: <code>{limit}</code>", parse_mode="HTML")
+        if ok:
+            exp_date = (datetime.now() + timedelta(days=data['ds'])).strftime("%d/%m/%Y")
+            ticket = (
+                "<b>=======================================</b>\n"
+                "<b>      🎟️ TICKET DE ACCESO GAMER 🎟️</b>\n"
+                "<b>=======================================</b>\n"
+                f"👤 <b>USUARIO   :</b> <code>{data['un']}</code>\n"
+                f"🔑 <b>PASSWORD  :</b> <code>{data['pw']}</code>\n"
+                f"⏳ <b>EXPIRACIÓN :</b> <code>{exp_date}</code>\n"
+                f"🚀 <b>LÍMITE     :</b> <code>{limit} Conexiones</code>\n"
+                "<b>=======================================</b>\n"
+                f"🌐 <b>SERVIDOR IP :</b> <code>{v['vps_ip']}</code>\n"
+                "<b>=======================================</b>\n"
+                "<b>🛰️ PROTOCOLOS Y PUERTOS ACTIVOS:</b>\n"
+                "🔹 <b>SSH Directo :</b> <code>22, 442</code>\n"
+                "🔹 <b>Dropbear    :</b> <code>80, 143, 109</code>\n"
+                "🔹 <b>SSL/Stunnel :</b> <code>443, 444</code>\n"
+                "🔹 <b>Websocket   :</b> <code>80, 8080, 8880</code>\n"
+                "🔹 <b>Squid Proxy :</b> <code>8080, 3128</code>\n"
+                "🔹 <b>Xray VLESS  :</b> <code>443 (Gamer)</code>\n"
+                "🔹 <b>SlowDNS     :</b> <code>Puerto 53</code>\n"
+                "<b>=======================================</b>\n"
+                "       🛡️ <b>By @underkraker</b> 🛡️\n"
+                "<b>=======================================</b>"
+            )
+            bot.send_message(m.chat.id, ticket, parse_mode="HTML")
         else: bot.send_message(m.chat.id, f"❌ Error: <code>{html.escape(err)}</code>", parse_mode="HTML")
     except: bot.send_message(m.chat.id, "❌ Límite inválido."); send_welcome(m)
 
