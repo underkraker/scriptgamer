@@ -1020,38 +1020,53 @@ function show_access_details() {
     # 1. SSH / Dropbear
     DB_PORTS=$(netstat -tulnp | grep dropbear | awk '{print $4}' | cut -d: -f2 | sort -u | xargs)
     if [ -n "$DB_PORTS" ]; then
-        echo -e "   ${GREEN}[SSH/Dropbear]${NC} ${WHITE}$IP:$DB_PORTS${NC}"
+        echo -e "   ${GREEN}[SSH/Dropbear Solo]${NC}"
+        echo -e "     • Host: ${WHITE}$IP${NC}"
+        echo -e "     • Port: ${WHITE}${DB_PORTS// /, }${NC}"
+        echo -e "     • Mode: ${WHITE}Directo (TCP)${NC}"
     fi
 
     # 2. SSL (Stunnel)
-    SSL_PORTS=$(netstat -tulnp | grep stunnel4 | awk '{print $4}' | cut -d: -f2 | sort -u | xargs)
+    SSL_PORTS=$(netstat -tulnp | grep stunnel | awk '{print $4}' | cut -d: -f2 | sort -u | xargs)
     if [ -n "$SSL_PORTS" ]; then
-        echo -e "   ${GREEN}[SSL/Stunnel]${NC} ${WHITE}$IP:$SSL_PORTS${NC}"
+        echo -e "   ${GREEN}[SSL/TLS Tunnel]${NC}"
+        echo -e "     • Host: ${WHITE}$IP${NC}"
+        echo -e "     • Port: ${WHITE}${SSL_PORTS// /, }${NC}"
+        echo -e "     • SNI : ${WHITE}www.google.com${NC} (o tu dominio)"
     fi
 
     # 3. WebSocket (HTTP Custom/Injector)
-    WS_PORT=$(netstat -tulnp | grep ws.py | awk '{print $4}' | cut -d: -f2 | head -1)
-    if [ -z "$WS_PORT" ]; then WS_PORT=$(netstat -tulnp | grep python3 | grep ":8080 " | awk '{print $4}' | cut -d: -f2); fi
+    WS_PORT=$(netstat -tulnp | grep -E "ws.py|python3" | grep -v "grep" | awk '{print $4}' | cut -d: -f2 | head -1)
     if [ -n "$WS_PORT" ]; then
-        echo -e "   ${GREEN}[WebSocket]${NC} ${WHITE}Puerto: $WS_PORT${NC}"
-        echo -e "   ${CYAN}Payload WS:${NC} ${WHITE}GET / HTTP/1.1[crlf]Host: [host][crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]${NC}"
+        echo -e "   ${GREEN}[WebSocket / Payload]${NC}"
+        echo -e "     • Port: ${WHITE}$WS_PORT${NC}"
+        echo -e "     • Payload:${NC} ${YELLOW}GET / HTTP/1.1[crlf]Host: [host][crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]${NC}"
     fi
 
     # 4. SlowDNS
     if [ -f /etc/gaming_vps/slowdns/server.pub ]; then
         SDNS_NS=$(pgrep -a dnstt-server | awk '{print $NF}')
         SDNS_PUB=$(cat /etc/gaming_vps/slowdns/server.pub)
-        echo -e "   ${GREEN}[SlowDNS]${NC} ${YELLOW}NS:${NC} ${WHITE}$SDNS_NS${NC}"
-        echo -e "   ${YELLOW}PUB KEY:${NC} ${WHITE}$SDNS_PUB${NC}"
+        echo -e "   ${GREEN}[SlowDNS (Puerto 53)]${NC}"
+        echo -e "     • NS: ${WHITE}$SDNS_NS${NC}"
+        echo -e "     • Key:${NC} ${WHITE}$SDNS_PUB${NC}"
     fi
 
-    # 5. Xray/VLESS (Reality)
+    # 5. Xray/VLESS (Reality/CDN)
     if [ -f /usr/local/etc/xray/config.json ]; then
-        X_UUID=$(jq -r '.inbounds[0].settings.clients[0].id' /usr/local/etc/xray/config.json)
-        X_PORT=$(jq -r '.inbounds[0].port' /usr/local/etc/xray/config.json)
-        X_SNI=$(jq -r '.inbounds[0].streamSettings.realitySettings.serverNames[0]' /usr/local/etc/xray/config.json)
-        X_PUB=$(xray x25519 -i $(jq -r '.inbounds[0].streamSettings.realitySettings.privateKey' /usr/local/etc/xray/config.json) | grep "Public key:" | awk '{print $3}')
-        echo -e "   ${GREEN}[Xray-Reality]${NC} ${WHITE}VLESS://$X_UUID@$IP:$X_PORT?security=reality&sni=$X_SNI&fp=chrome&pbk=$X_PUB&type=tcp&flow=xtls-rprx-vision${NC}"
+        X_UUID=$(jq -r '.inbounds[0].settings.clients[0].id' /usr/local/etc/xray/config.json 2>/dev/null)
+        X_PORT=$(jq -r '.inbounds[0].port' /usr/local/etc/xray/config.json 2>/dev/null)
+        echo -e "   ${GREEN}[Xray Multi-Tunnel]${NC}"
+        echo -e "     • UUID: ${WHITE}$X_UUID${NC}"
+        echo -e "     • Port: ${WHITE}$X_PORT${NC}"
+    fi
+
+    # 6. Hysteria 2
+    if pgrep -f "hysteria" >/dev/null; then
+        HY_PORT=$(grep "listen:" /etc/hysteria/config.yaml | cut -d':' -f3)
+        echo -e "   ${GREEN}[Hysteria 2 (UDP)]${NC}"
+        echo -e "     • Port: ${WHITE}$HY_PORT${NC}"
+        echo -e "     • Auth: ${WHITE}krakerHY2${NC}"
     fi
 
     echo -e "   ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -1497,8 +1512,8 @@ function main_menu() {
         echo -e "    ${CYAN}[${YELLOW}98${CYAN}]${NC} ${WHITE}🔄 Actualizar Script${NC}   ${CYAN}[${YELLOW}99${CYAN}]${NC} ${WHITE}🗑️ Desinstalar Script${NC}"
         echo -e "   ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción del panel:${NC} "
-        read option
+        echo -e -n "   ${WHITE}${BOLD}🎮 Selecciona una opción del panel (Autorefresco 5s):${NC} "
+        read -t 5 option
 
         case $option in
             1)
